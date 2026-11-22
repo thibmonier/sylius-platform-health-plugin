@@ -23,6 +23,8 @@ final class DemoDataCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::warning(new TranslatableMessage('tests.fixture.data.demo'));
+        ProbeExecutions::record();
+
+        return HealthResult::warning(new TranslatableMessage('Demo probe: 7 products are enabled without a price on the B2B channel.'));
     }
 }

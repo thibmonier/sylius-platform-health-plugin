@@ -2,3 +2,8 @@ imports:
     - { resource: "services.php" }
 
 tmonier_sylius_platform_health: ~
+
+framework:
+    translator:
+        paths:
+            - '%kernel.project_dir%/../../../tests/TestApplication/translations'
