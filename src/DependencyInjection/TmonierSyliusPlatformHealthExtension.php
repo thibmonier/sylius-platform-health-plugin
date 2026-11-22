@@ -7,20 +7,31 @@ namespace Tmonier\SyliusPlatformHealthPlugin\DependencyInjection;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Symfony\Component\Yaml\Yaml;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 
-final class TmonierSyliusPlatformHealthExtension extends Extension
+final class TmonierSyliusPlatformHealthExtension extends Extension implements PrependExtensionInterface
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{time_budget_ms: int} $config */
+        /** @var array{time_budget_ms: int, cache_ttl: int} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('tmonier_sylius_platform_health.time_budget_ms', $config['time_budget_ms']);
+        $container->setParameter('tmonier_sylius_platform_health.cache_ttl', $config['cache_ttl']);
         $container->registerForAutoconfiguration(HealthCheckInterface::class)->addTag(HealthCheckInterface::TAG);
 
         (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('services.php');
+    }
+
+    public function prepend(ContainerBuilder $container): void
+    {
+        // The hooks of the page are part of the plugin: the application has nothing to import for them.
+        /** @var array{sylius_twig_hooks: array<string, mixed>} $hooks */
+        $hooks = Yaml::parseFile(__DIR__ . '/../../config/twig_hooks/admin.yaml');
+        $container->prependExtensionConfig('sylius_twig_hooks', $hooks['sylius_twig_hooks']);
     }
 
     public function getAlias(): string

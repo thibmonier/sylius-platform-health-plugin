@@ -32,6 +32,8 @@ final class PluginBootTest extends KernelTestCase
                 'environment.demo' => HealthStatus::Ok,
                 'data.demo' => HealthStatus::Warning,
                 'shop.demo' => HealthStatus::Critical,
+                'plugins.demo' => HealthStatus::Unknown,
+                'plugins.failing' => HealthStatus::Unknown,
             ],
             array_column(array_map(static fn (HealthCheckReport $report): array => [$report->identifier, $report->result->status], $reports), 1, 0),
         );

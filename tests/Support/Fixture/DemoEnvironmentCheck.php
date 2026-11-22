@@ -23,6 +23,8 @@ final class DemoEnvironmentCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::ok(new TranslatableMessage('tests.fixture.environment.demo'));
+        ProbeExecutions::record();
+
+        return HealthResult::ok(new TranslatableMessage('Demo probe: the PHP version is supported.'));
     }
 }

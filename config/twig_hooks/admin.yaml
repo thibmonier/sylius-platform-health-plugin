@@ -1,0 +1,23 @@
+sylius_twig_hooks:
+    hooks:
+        # The page reuses the common index skeleton of the administration (sidebar, navbar, content, header).
+        'tmonier_platform_health.admin.index.content':
+            grid:
+                enabled: false
+            summary:
+                template: '@TmonierSyliusPlatformHealthPlugin/admin/index/summary.html.twig'
+                priority: 100
+
+        'tmonier_platform_health.admin.index.content.header':
+            breadcrumbs:
+                enabled: false
+
+        'tmonier_platform_health.admin.index.content.header.title_block':
+            title:
+                template: '@SyliusAdmin/shared/crud/common/content/header/title_block/title.html.twig'
+                configuration:
+                    title: tmonier_platform_health.ui.title
+                    sylius_test_html_attribute: 'platform-health-header'
+                priority: 100
+            actions:
+                enabled: false
