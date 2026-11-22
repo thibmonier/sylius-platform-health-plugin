@@ -41,10 +41,11 @@ final class HealthSnapshotProviderTest extends TestCase
 
     public function testTheChecksRunAgainOnceTheTtlHasElapsed(): void
     {
-        $provider = $this->provider(60);
+        $provider = $this->provider(1);
 
         $provider->snapshot();
-        $this->clock->sleep(61);
+        // The cache of Symfony 6.4 reads the real time, it cannot be driven by a mock clock.
+        usleep(1_200_000);
         $provider->snapshot();
 
         self::assertSame(2, $this->runs);
@@ -102,7 +103,7 @@ final class HealthSnapshotProviderTest extends TestCase
 
         return new HealthSnapshotProvider(
             new HealthCheckRunner([$check], new NullLogger()),
-            new ArrayAdapter(clock: $this->clock),
+            new ArrayAdapter(),
             $this->clock,
             new NullLogger(),
             $ttl,
