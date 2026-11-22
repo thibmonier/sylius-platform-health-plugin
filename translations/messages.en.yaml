@@ -1,0 +1,4 @@
+tmonier_platform_health:
+    result:
+        budget_exceeded: 'Time budget exceeded (%budget_ms% ms): the check is not conclusive.'
+        check_failed: 'The check could not be completed: see the application log.'
