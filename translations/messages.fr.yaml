@@ -2,3 +2,26 @@ tmonier_platform_health:
     result:
         budget_exceeded: 'Budget de temps dépassé (%budget_ms% ms) : le contrôle n''est pas concluant.'
         check_failed: 'Le contrôle n''a pas pu aboutir : voir le journal de l''application.'
+    category:
+        environment: Environnement
+        data: Données
+        scheduled_tasks: Tâches planifiées
+        shop: Boutique
+        plugins: Plugins
+    status:
+        ok: OK
+        warning: Avertissement
+        critical: Critique
+        unknown: Non mesurable
+    ui:
+        menu: Santé de la plateforme
+        title: Santé de la plateforme
+        loading: Vérification de la plateforme...
+        generated_at: 'Mesuré à %time%.'
+        refresh: Rafraîchir
+        checks: '{1} 1 contrôle|]1,Inf[ %count% contrôles'
+        fix: Corriger
+        empty:
+            title: Aucune sonde n''est installée
+            body: 'Le plugin ne fournit aucun diagnostic : chaque contrôle est une classe qui implémente HealthCheckInterface.'
+            documentation: Voir la documentation

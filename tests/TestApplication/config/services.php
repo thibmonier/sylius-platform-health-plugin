@@ -6,15 +6,17 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoEnvironmentCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoShopCheck;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\FailingCheck;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\UnmeasurableCheck;
 
 /*
- * Test application only: three probes declared like an integrator would, as plain services. Nothing tags them by hand,
+ * Test application only: five probes declared like an integrator would, as plain services. Nothing tags them by hand,
  * the autoconfiguration of HealthCheckInterface does.
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
 
-    foreach ([DemoEnvironmentCheck::class, DemoDataCheck::class, DemoShopCheck::class] as $check) {
+    foreach ([DemoEnvironmentCheck::class, DemoDataCheck::class, DemoShopCheck::class, UnmeasurableCheck::class, FailingCheck::class] as $check) {
         $services->set($check)->autoconfigure();
     }
 

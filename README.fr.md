@@ -9,7 +9,35 @@
 
 ## État
 
-Cette version ne livre que le **contrat et l'exécuteur**. Le plugin ne fournit **aucune sonde réelle pour l'instant** et aucune page : la page d'administration vient ensuite. Rien n'est affiché.
+Cette version livre le **contrat, l'exécuteur et la page d'administration**. Le plugin ne fournit **aucune sonde réelle pour l'instant** : la page affiche les sondes que votre application (ou un autre plugin) déclare, et une explication quand il n'y en a aucune. La capture ci-dessous vient de l'application de test, avec cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet.
+
+## La page d'administration
+
+*Configuration > Santé de la plateforme* (`/admin/platform-health`, protégée par le pare-feu d'administration de Sylius).
+
+![La page Santé de la plateforme : une carte par catégorie, la plus grave en premier](docs/screenshots/platform-health-fr.png)
+
+- **Synthèse par catégorie.** Chaque catégorie prend le pire statut de ses sondes (`critical`, `warning`, `unknown`, `ok`) : la catégorie qui contient une sonde critique passe en premier. Une sonde `unknown` s'affiche « Non mesurable » avec son motif court ; elle ne compte jamais comme critique, et ne laisse jamais une catégorie « OK ».
+- **Détail par sonde, replié par défaut** : statut (toujours écrit en toutes lettres, jamais porté par la seule couleur), résumé, détail et **lien d'action** de la sonde, construit depuis le nom de route et les paramètres de son `HealthActionLink`. Une sonde qui pointe vers une route inexistante n'a pas de lien, pas d'erreur.
+- **Rendu différé** (Live Component Symfony UX, `loading="defer"`) : la page répond tout de suite avec un squelette, les résultats arrivent juste après. Aucune sonde ne s'exécute pendant la construction du squelette.
+- **Cache court mutualisé** : les résultats sont conservés `cache_ttl` secondes (60 par défaut, `0` désactive le cache) : trois administrateurs devant la page n'exécutent les sondes qu'une fois. Le bouton **Rafraîchir** les exécute à nouveau et remplace le cache.
+- **Aucune sonde installée** : la page le dit et renvoie à cette documentation, elle n'est ni vide ni en erreur.
+- Une sonde défaillante ne casse jamais la page et le message de son exception n'est jamais affiché (il va au journal de l'application).
+
+```yaml
+# config/routes/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
+```
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    time_budget_ms: 500   # par sonde
+    cache_ttl: 60         # secondes mutualisées entre administrateurs, 0 désactive
+```
+
+L'entrée de menu et les hooks de la page sont enregistrés par le plugin lui-même, rien d'autre à importer.
 
 ## Le contrat
 
@@ -71,7 +99,7 @@ Déclarez-la comme service avec l'autoconfiguration (le défaut d'une applicatio
 composer require tmonier/sylius-platform-health-plugin
 ```
 
-Enregistrez `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` dans `config/bundles.php`. Toutes les commandes de développement passent par Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`) ; la base est le MySQL de `sylius-b2b-demo`, dans une base au nom du plugin.
+Enregistrez `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` dans `config/bundles.php` et importez les routes (voir plus haut). Toutes les commandes de développement passent par Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`) ; la base est le MySQL de `sylius-b2b-demo`, dans une base au nom du plugin.
 
 ## Licence
 

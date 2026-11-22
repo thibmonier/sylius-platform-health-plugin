@@ -15,6 +15,7 @@
         <!-- No .env file: the plugin declares itself to the Sylius test application here (and in the CI job env). -->
         <server name="SYLIUS_TEST_APP_BUNDLES_PATH" value="tests/TestApplication/config/bundles.php"/>
         <server name="SYLIUS_TEST_APP_CONFIGS_TO_IMPORT" value="../../../../tests/TestApplication/config/config.yaml"/>
+        <server name="SYLIUS_TEST_APP_ROUTES_TO_IMPORT" value="../../../../tests/TestApplication/config/routes.yaml"/>
 
         <env name="APP_SECRET" value="''" />
         <env name="APP_ENV" value="test"/>

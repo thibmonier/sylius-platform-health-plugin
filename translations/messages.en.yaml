@@ -2,3 +2,26 @@ tmonier_platform_health:
     result:
         budget_exceeded: 'Time budget exceeded (%budget_ms% ms): the check is not conclusive.'
         check_failed: 'The check could not be completed: see the application log.'
+    category:
+        environment: Environment
+        data: Data
+        scheduled_tasks: Scheduled tasks
+        shop: Shop
+        plugins: Plugins
+    status:
+        ok: OK
+        warning: Warning
+        critical: Critical
+        unknown: Not measurable
+    ui:
+        menu: Platform health
+        title: Platform health
+        loading: Checking the platform...
+        generated_at: 'Measured at %time%.'
+        refresh: Refresh
+        checks: '{1} 1 check|]1,Inf[ %count% checks'
+        fix: Fix
+        empty:
+            title: No health check is installed
+            body: 'The plugin ships no diagnostic of its own: each check is a class that implements HealthCheckInterface.'
+            documentation: See the documentation

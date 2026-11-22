@@ -1,0 +1,9 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}
+    {{ 'tmonier_platform_health.ui.title'|trans }} {{ parent() }}
+{% endblock %}
+
+{% block body %}
+    {% hook ['tmonier_platform_health.admin.index', 'sylius_admin.common.index'] %}
+{% endblock %}

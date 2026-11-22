@@ -9,7 +9,35 @@
 
 ## Status
 
-This version ships the **contract and the runner only**. The plugin ships **no real probe yet** and no page: the administration page comes next. Nothing is displayed.
+This version ships the **contract, the runner and the administration page**. The plugin ships **no real probe yet**: the page shows the probes that your application (or another plugin) declares, and an explanation when there is none. The screenshot below comes from the test application, with five demonstration probes that live in `tests/`, not in the package.
+
+## The administration page
+
+*Configuration > Platform health* (`/admin/platform-health`, protected by the Sylius admin firewall).
+
+![The platform health page: one card per category, the most severe first](docs/screenshots/platform-health-en.png)
+
+- **Summary by category.** Each category takes the worst status of its probes (`critical`, `warning`, `unknown`, `ok`): the category that holds a critical probe comes first. An `unknown` probe reads "Not measurable" with its short reason; it never counts as critical, and never lets a category read "OK".
+- **Detail by probe, folded by default**: status (always spelled out, never carried by colour alone), summary, detail and the **action link** of the probe, built from the route name and parameters of its `HealthActionLink`. A probe that points to a route that does not exist gets no link, not an error.
+- **Deferred render** (Symfony UX Live Component, `loading="defer"`): the page answers at once with a skeleton, the results arrive right after. No probe runs while the skeleton is built.
+- **Shared short cache**: the results are kept for `cache_ttl` seconds (60 by default, `0` disables the cache), so three administrators looking at the page run the probes once. The **Refresh** button runs them again and replaces the cache.
+- **No probe installed**: the page says so and points to this documentation, it is neither empty nor an error.
+- A failing probe never breaks the page and its exception message is never displayed (it goes to the application log).
+
+```yaml
+# config/routes/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
+```
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    time_budget_ms: 500   # per probe
+    cache_ttl: 60         # seconds shared between administrators, 0 disables
+```
+
+The menu entry and the page hooks are registered by the plugin itself, nothing else to import.
 
 ## The contract
 
@@ -71,7 +99,7 @@ Declare it as a service with autoconfiguration (the default of a Symfony applica
 composer require tmonier/sylius-platform-health-plugin
 ```
 
-Register `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` in `config/bundles.php`. Every development command runs in Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`); the database is the MySQL of `sylius-b2b-demo`, in a database named after the plugin.
+Register `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` in `config/bundles.php` and import the routes (see above). Every development command runs in Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`); the database is the MySQL of `sylius-b2b-demo`, in a database named after the plugin.
 
 ## License
 

@@ -19,6 +19,11 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(500)
                     ->min(1)
                 ->end()
+                ->integerNode('cache_ttl')
+                    ->info('Seconds the results of the probes are shared between administrators (0 disables the cache). The refresh button ignores it.')
+                    ->defaultValue(60)
+                    ->min(0)
+                ->end()
             ->end()
         ;
 

@@ -87,6 +87,7 @@ jobs:
             # No .env file in the test application: the plugin declares itself to the Sylius test application here.
             SYLIUS_TEST_APP_BUNDLES_PATH: tests/TestApplication/config/bundles.php
             SYLIUS_TEST_APP_CONFIGS_TO_IMPORT: ../../../../tests/TestApplication/config/config.yaml
+            SYLIUS_TEST_APP_ROUTES_TO_IMPORT: ../../../../tests/TestApplication/config/routes.yaml
 
         steps:
             -
