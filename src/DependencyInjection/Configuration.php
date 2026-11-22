@@ -12,7 +12,15 @@ final class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('tmonier_sylius_platform_health');
-        $treeBuilder->getRootNode();
+        $treeBuilder->getRootNode()
+            ->children()
+                ->integerNode('time_budget_ms')
+                    ->info('Time budget of each probe, in milliseconds, measured by the runner after the probe returns.')
+                    ->defaultValue(500)
+                    ->min(1)
+                ->end()
+            ->end()
+        ;
 
         return $treeBuilder;
     }
