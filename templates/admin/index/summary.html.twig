@@ -1,0 +1,8 @@
+<div class="container-xl">
+    <div class="row">
+        <div class="col-12">
+            {# loading="defer": the page answers with this skeleton, the browser then asks for the results. #}
+            {{ component('tmonier_platform_health:summary', { loading: 'defer' }) }}
+        </div>
+    </div>
+</div>

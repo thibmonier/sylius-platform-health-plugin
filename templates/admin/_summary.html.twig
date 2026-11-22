@@ -1,1 +1,43 @@
-{# Stub #}
+{% set badge_classes = { critical: 'bg-danger', warning: 'bg-warning text-dark', unknown: 'bg-secondary', ok: 'bg-success' } %}
+
+{% if categories is empty %}
+    <div class="card" data-test-health-empty>
+        <div class="card-body">
+            <h2 class="h4">{{ 'tmonier_platform_health.ui.empty.title'|trans }}</h2>
+            <p class="mb-0">
+                {{ 'tmonier_platform_health.ui.empty.body'|trans }}
+                <a href="https://github.com/thibmonier/sylius-platform-health-plugin#your-own-probe-in-fifteen-lines" target="_blank" rel="noopener noreferrer">{{ 'tmonier_platform_health.ui.empty.documentation'|trans }}</a>
+            </p>
+        </div>
+    </div>
+{% else %}
+    {% for summary in categories %}
+        <section class="card mb-3" data-test-health-category="{{ summary.category.value }}" data-test-health-status="{{ summary.status.value }}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title h4 mb-0">{{ ('tmonier_platform_health.category.' ~ summary.category.value)|trans }}</h2>
+                <span class="badge {{ badge_classes[summary.status.value] }}">{{ ('tmonier_platform_health.status.' ~ summary.status.value)|trans }}</span>
+            </div>
+            <div class="card-body">
+                <details data-test-health-details>
+                    <summary>{{ 'tmonier_platform_health.ui.checks'|trans({'%count%': summary.reports|length}) }}</summary>
+                    <ul class="list-unstyled mt-3 mb-0">
+                        {% for report in summary.reports %}
+                            {% set result = report.result %}
+                            {% set action_url = tmonier_platform_health_action_url(result.action) %}
+                            <li class="d-flex flex-wrap gap-2 align-items-baseline py-2 border-top" data-test-health-check="{{ report.identifier }}" data-test-health-status="{{ result.status.value }}">
+                                <span class="badge {{ badge_classes[result.status.value] }}">{{ ('tmonier_platform_health.status.' ~ result.status.value)|trans }}</span>
+                                <span data-test-health-summary>{{ result.summary|trans }}</span>
+                                {% if result.detail is not null %}
+                                    <small class="text-muted w-100" data-test-health-detail>{{ result.detail|trans }}</small>
+                                {% endif %}
+                                {% if action_url is not null %}
+                                    <a class="ms-auto" href="{{ action_url }}" data-test-health-action>{{ 'tmonier_platform_health.ui.fix'|trans }}</a>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+            </div>
+        </section>
+    {% endfor %}
+{% endif %}

@@ -1,1 +1,8 @@
-# Stub: the administration route comes with the next commits.
+# Import this file from your application's config/routes:
+#
+# tmonier_sylius_platform_health:
+#     resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
+
+tmonier_platform_health_admin:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes/admin.yaml"
+    prefix: '/%sylius_admin.path_name%'
