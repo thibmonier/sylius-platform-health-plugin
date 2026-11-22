@@ -1,0 +1,19 @@
+# Local tooling only: one PHP container. The database is the MySQL of sylius-b2b-demo (`docker compose up -d --wait mysql`
+# in that repository, published on 127.0.0.1:3340): no second database server, and a database named after the plugin.
+services:
+    php:
+        image: ghcr.io/sylius/sylius-php:8.3-alpine
+        user: ${DOCKER_USER:-1000:1000}
+        working_dir: /srv/sylius
+        environment:
+            APP_ENV: ${ENV:-test}
+            APP_SECRET: local-only-secret
+            DATABASE_URL: "mysql://root@host.docker.internal:3340/platform_health_test?serverVersion=8.4&charset=utf8mb4"
+            MAILER_DSN: "null://null"
+            SYLIUS_TEST_APP_BUNDLES_PATH: tests/TestApplication/config/bundles.php
+            SYLIUS_TEST_APP_CONFIGS_TO_IMPORT: ../../../../tests/TestApplication/config/config.yaml
+            PHP_DATE_TIMEZONE: ${PHP_DATE_TIMEZONE:-UTC}
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - .:/srv/sylius:rw,cached
