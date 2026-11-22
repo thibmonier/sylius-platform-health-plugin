@@ -1,4 +1,4 @@
-{% set badge_classes = { critical: 'bg-danger', warning: 'bg-warning text-dark', unknown: 'bg-secondary', ok: 'bg-success' } %}
+{% set badge_classes = { critical: 'bg-danger text-white', warning: 'bg-warning text-dark', unknown: 'bg-light text-dark border', ok: 'bg-success text-white' } %}
 
 {% if categories is empty %}
     <div class="card" data-test-health-empty>
