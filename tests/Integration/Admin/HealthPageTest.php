@@ -127,7 +127,8 @@ final class HealthPageTest extends WebTestCase
     public function testTheRefreshActionRunsTheChecksAgainAndReplacesTheCache(): void
     {
         $this->client->loginUser($this->admin(), 'admin');
-        $component = $this->createLiveComponent('tmonier_platform_health:summary', [], $this->client);
+        // Some Sylius/Symfony combinations (6.4) generate the component route with a mandatory locale.
+        $component = $this->createLiveComponent('tmonier_platform_health:summary', [], $this->client)->setRouteLocale('en_US');
         $component->render();
         self::assertSame(self::FIVE_PROBES, ProbeExecutions::count());
 
