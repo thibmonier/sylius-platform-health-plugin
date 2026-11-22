@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-22
+
 ### Added
 - Plugin skeleton (bundle, configuration prefix `tmonier_sylius_platform_health`, test application, CI on Sylius 2.2 and 2.3). The plugin ships no real probe yet.
 - Probe contract: `HealthCheckInterface`, `HealthStatus`, `HealthCategory`, `HealthResult`, `HealthActionLink`, discovered by an autoconfigured tag.
@@ -15,3 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Deferred render: Live Component with `loading="defer"`, the skeleton answers without running any probe.
 - Shared short cache of the results (`cache_ttl`, 60 seconds by default, 0 disables it) and a "Refresh" action that ignores the cache and replaces it.
 - English and French translations of the page, README section and screenshots (the demonstration probes live in the test application).
+
+[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/thibmonier/sylius-platform-health-plugin/releases/tag/v0.1.0
