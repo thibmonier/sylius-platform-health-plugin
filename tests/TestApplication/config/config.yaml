@@ -1,1 +1,4 @@
+imports:
+    - { resource: "services.php" }
+
 tmonier_sylius_platform_health: ~
