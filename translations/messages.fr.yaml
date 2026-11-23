@@ -46,6 +46,13 @@ tmonier_platform_health:
         refresh: Rafraîchir
         checks: '{1} 1 contrôle|]1,Inf[ %count% contrôles'
         fix: Corriger
+        caption: 'Contrôles de la catégorie %category%'
+        updated: 'Résultats mis à jour. Mesuré à %time%.'
+        column:
+            check: Contrôle
+            status: Statut
+            summary: Résumé
+            action: Action
         empty:
             title: Aucune sonde n''est installée
             body: 'Le plugin ne fournit aucun diagnostic : chaque contrôle est une classe qui implémente HealthCheckInterface.'

@@ -73,6 +73,17 @@ Les sondes sont écrites par des tiers : la page masque ce qu'une sonde laisse �
 | Autre chemin absolu de fichier | `.../fichier.ext` |
 | Trace d'exécution (`Stack trace:`, `#0 /chemin/File.php(12): ...`) | « Le détail a été masqué : voir le journal de l'application. », et la sonde est journalisée par son identifiant (jamais la trace) |
 
+## Accessibilité
+
+La page vise **WCAG 2.2 niveau AA** (la cible du thème de l'administration, pas AAA).
+
+- **Un statut n'est jamais porté par la seule couleur** : chaque catégorie et chaque sonde l'écrit en toutes lettres (« OK », « Avertissement », « Critique », « Non mesurable ») à côté d'une icône dont la *forme* diffère selon le statut (coche, triangle, octogone, point d'interrogation). Les icônes sont décoratives (`aria-hidden`), le mot porte le sens.
+- **Le détail est un vrai tableau** : `<caption>`, en-têtes `scope="col"`, un en-tête `scope="row"` par sonde, dans un `<details>`/`<summary>` natif (clavier et lecteur d'écran sans rien ajouter). Un lien d'action se lit « Corriger : <résumé de la sonde> », jamais « cliquer ici ».
+- **Le rafraîchissement est annoncé** : une région `role="status"` (`aria-live="polite"`) dit « Résultats mis à jour » avec l'heure de la mesure, le focus reste sur le bouton **Rafraîchir**, et les résultats portent `aria-busy="true"` pendant le calcul (posé par le petit script de l'entrypoint admin du plugin). Le squelette de chargement respecte `prefers-reduced-motion`.
+- **Thèmes clair et sombre** : les couleurs sont des variables CSS (`--tph-*`) qui suivent `data-bs-theme` de l'administration (Tabler), déclarées une fois dans `templates/admin/_tokens.html.twig` ; aucun gabarit ne porte de couleur. Chaque paire (texte sur fond, libellé sur pastille, icône sur pastille, bordure sur fond) est **mesurée** par `tests/Unit/Accessibility/StatusContrastTest.php`, qui échoue en nommant le jeton, le fond et le rapport trouvé quand un texte passe sous 4,5:1 ou une icône ou une bordure sous 3:1, dans les deux thèmes. Un jeton se change avec ce test.
+
+Hors périmètre : AAA, droite à gauche, couleurs forcées au-delà d'un contrôle manuel. Les tests prouvent le balisage et le contraste ; un passage au lecteur d'écran reste un contrôle manuel.
+
 ## Sondes d'environnement
 
 Six sondes de la catégorie `environment`, enregistrées par le plugin lui-même (rien à déclarer), en lecture seule, **sans appel réseau**, sans jamais afficher la valeur d'une variable d'environnement. Chaque résultat qui n'est pas `ok` renvoie vers cette documentation (`Corriger`).

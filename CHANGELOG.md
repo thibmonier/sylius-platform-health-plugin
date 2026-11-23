@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `tmonier_sylius_platform_health.access.role` (US-290): role that the `PLATFORM_HEALTH_VIEW` attribute requires, `ROLE_ADMINISTRATION_ACCESS` by default (no change from v0.1.0). A value that does not start with `ROLE_` fails the compilation of the container. Production recommendation: `ROLE_PLATFORM_HEALTH_VIEW`, granted with `sylius:user:promote <email> ROLE_PLATFORM_HEALTH_VIEW --user-type=admin`.
 - `PlatformHealthVoter` for the `PLATFORM_HEALTH_VIEW` attribute; the menu entry is shown only to who holds the right.
 - `SensitiveValueMasker`: DSN credentials, `password=`-like pairs, long keys and absolute paths are masked in every summary and detail; an execution trace is replaced by a generic message and the faulty probe is logged by its identifier.
+- Accessibility WCAG 2.2 AA of the page (US-291): status spelled out and drawn with an icon of distinct shape for each status (never colour alone), probes in a `<table>` with `<caption>` and `scope` inside a native `<details>`, `role="status"` region announcing the update, `aria-busy` while the probes run, action links named after the probe, `prefers-reduced-motion` honoured.
+- Colour tokens `--tph-*` that follow `data-bs-theme` (light and dark theme of the Sylius 2 administration), in `templates/admin/_tokens.html.twig`; a unit test computes the WCAG contrast ratio of every pair (4.5:1 for text, 3:1 for icons and borders) in both themes.
+- Translations (EN, FR) of the table headers, the caption and the update announcement.
+
+### Changed
+- The status badges and the Refresh button use the plugin's own tokens instead of the Bootstrap utility classes (`bg-success`, `btn-outline-primary`...), whose contrast was below 4.5:1 in the light theme.
 
 ### Security
 - The page, the Live Component endpoint (`/admin/{_locale}/_components/...`) and its refresh action are guarded by `PLATFORM_HEALTH_VIEW`: an administrator without the configured role gets a 403 (OWASP A01). With the default role the behaviour is unchanged.

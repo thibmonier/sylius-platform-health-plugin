@@ -158,7 +158,8 @@ final class AccessibleSummaryTest extends WebTestCase
 
         $html = $this->client->request('GET', '/admin/platform-health')->html();
 
-        self::assertSame(1, substr_count($html, '--tph-surface:'));
+        // Declared once per theme (light, dark): the partial is included a single time.
+        self::assertSame(2, substr_count($html, '--tph-surface:'));
         self::assertStringContainsString('prefers-reduced-motion: reduce', $html);
     }
 
