@@ -9,7 +9,7 @@
 
 ## État
 
-Cette version livre le **contrat, l'exécuteur et la page d'administration**. Le plugin ne fournit **aucune sonde réelle pour l'instant** : la page affiche les sondes que votre application (ou un autre plugin) déclare, et une explication quand il n'y en a aucune. La capture ci-dessous vient de l'application de test, avec cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet.
+Cette version livre le **contrat, l'exécuteur, la page d'administration et six sondes d'environnement** (versions et fin de support, extensions, OPcache, mode debug). La capture ci-dessous vient de l'application de test, avec cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet.
 
 ## La page d'administration
 
@@ -38,6 +38,28 @@ tmonier_sylius_platform_health:
 ```
 
 L'entrée de menu et les hooks de la page sont enregistrés par le plugin lui-même, rien d'autre à importer.
+
+## Sondes d'environnement
+
+Six sondes de la catégorie `environment`, enregistrées par le plugin lui-même (rien à déclarer), en lecture seule, **sans appel réseau**, sans jamais afficher la valeur d'une variable d'environnement. Chaque résultat qui n'est pas `ok` renvoie vers cette documentation (`Corriger`).
+
+| Identifiant | Mesure | Statuts |
+|---|---|---|
+| `environment.php_version` | Version de PHP et fin du support de sécurité de sa branche | `ok` ; `warning` à moins de 180 jours de la fin ; `critical` le lendemain ; `unknown` pour une branche absente de la table |
+| `environment.symfony_version` | `Kernel::END_OF_MAINTENANCE` et `Kernel::END_OF_LIFE`, fournies par Symfony lui-même (pas de table) | mêmes seuils ; `warning` une fois la maintenance terminée |
+| `environment.sylius_version` | Version de Sylius et fin de support de sa branche mineure | comme PHP |
+| `environment.php_extensions` | `intl`, `mbstring`, `ctype`, `iconv`, `xml`, `curl`, `pdo`, `gd` ou `imagick` | `ok` ; `critical` qui liste **seulement les manquantes** |
+| `environment.opcache` | OPcache actif pour le SAPI qui sert la page | `ok` ; `warning` si inactif ; `unknown` si l'API est restreinte (`opcache.restrict_api`) |
+| `environment.app_debug` | `kernel.debug` et `kernel.environment` | `ok` en prod sans debug ; `critical` avec debug en prod ; `warning` hors prod |
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    environment:
+        support_warning_days: 180   # les sondes PHP, Symfony et Sylius alertent ce nombre de jours avant la fin du support
+```
+
+**La table des fins de support** (`EndOfSupportTable`) est figée dans le code : l'administration n'appelle jamais le réseau. Sa version (`2026-12`) est affichée par les sondes PHP et Sylius (« Table du 2026-12 »). Elle est **renouvelée à chaque version du plugin** ; douze mois après sa version, ces deux sondes passent en `warning` (« table de dates à renouveler ») au lieu d'un faux `ok`. Une branche de PHP ou de Sylius absente de la table est `unknown` (« branche absente de la table »), jamais `ok`. Les sondes lisent la date par le service `clock` de Symfony : les tests injectent une horloge fixe.
 
 ## Le contrat
 

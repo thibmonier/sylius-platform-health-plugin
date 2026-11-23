@@ -9,13 +9,10 @@ use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
-/**
- * Red stub (US-293).
- */
-final class OpcacheCheck implements HealthCheckInterface
+final readonly class OpcacheCheck implements HealthCheckInterface
 {
     public function __construct(
-        public readonly OpcacheStateReaderInterface $reader,
+        private OpcacheStateReaderInterface $reader,
     ) {
     }
 
@@ -31,6 +28,10 @@ final class OpcacheCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        return match ($this->reader->read()) {
+            OpcacheState::Active => HealthResult::ok(new TranslatableMessage('tmonier_platform_health.environment.opcache.ok')),
+            OpcacheState::Inactive => HealthResult::warning(new TranslatableMessage('tmonier_platform_health.environment.opcache.inactive'), null, DocumentationLink::create()),
+            OpcacheState::Restricted => HealthResult::unknown(new TranslatableMessage('tmonier_platform_health.environment.opcache.restricted'), null, DocumentationLink::create()),
+        };
     }
 }

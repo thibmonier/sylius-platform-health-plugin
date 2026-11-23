@@ -65,9 +65,18 @@ final class SyliusVersionCheckTest extends TestCase
         self::assertSummary($result, HealthStatus::Unknown, 'tmonier_platform_health.environment.support.unreadable', ['%name%' => 'Sylius']);
     }
 
-    public function testAStaleTableWarns(): void
+    public function testAStaleTableNeverGivesAnOk(): void
     {
-        $result = $this->execute('2.3.3', new \DateTimeImmutable('2027-12-02', new \DateTimeZone('UTC')));
+        $now = new \DateTimeImmutable('2027-12-02', new \DateTimeZone('UTC'));
+
+        self::assertSame(HealthStatus::Warning, $this->execute('2.3.3', $now)->status);
+    }
+
+    public function testAStaleTableWarnsToRenewItWhenTheBranchIsFarFromItsEnd(): void
+    {
+        $assessor = new SupportAssessor(new MockClock('2027-12-02', 'UTC'), $this->table);
+
+        $result = $assessor->assessTable('Sylius', '2.3.3', new \DateTimeImmutable('2035-01-01', new \DateTimeZone('UTC')));
 
         self::assertSummary($result, HealthStatus::Warning, 'tmonier_platform_health.environment.support.table_stale', ['%table%' => '2026-12']);
     }

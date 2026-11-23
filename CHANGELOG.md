@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Six environment probes (US-293), registered by the plugin: `environment.php_version`, `environment.symfony_version`, `environment.sylius_version`, `environment.php_extensions`, `environment.opcache`, `environment.app_debug`. Read-only, no network call, no environment variable value rendered.
+- `EndOfSupportTable`: end-of-support dates of PHP and Sylius frozen in the code, version `2026-12` displayed by the probes; a table older than 12 months turns them to `warning`, a branch absent from it is `unknown`. Symfony uses its own `Kernel::END_OF_MAINTENANCE` and `END_OF_LIFE`.
+- `tmonier_sylius_platform_health.environment.support_warning_days` (180 by default).
+- Route `tmonier_platform_health_documentation`: action link of the environment probes (redirects to the README).
+- English and French translations of the probes.
+
 ## [0.1.0] - 2026-11-22
 
 ### Added

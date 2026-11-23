@@ -10,13 +10,16 @@ use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
 /**
- * Red stub (US-293).
+ * Reads kernel.debug and kernel.environment, never an environment variable: only "prod", "dev", "test" (or
+ * "other") and a boolean reach the screen.
  */
-final class AppDebugCheck implements HealthCheckInterface
+final readonly class AppDebugCheck implements HealthCheckInterface
 {
+    private const KNOWN_ENVIRONMENTS = ['prod', 'dev', 'test'];
+
     public function __construct(
-        public readonly bool $debug,
-        public readonly string $environment,
+        private bool $debug,
+        private string $environment,
     ) {
     }
 
@@ -32,6 +35,23 @@ final class AppDebugCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        if ('prod' !== $this->environment) {
+            return HealthResult::warning(
+                new TranslatableMessage('tmonier_platform_health.environment.app_debug.not_prod', ['%environment%' => $this->displayableEnvironment()]),
+                null,
+                DocumentationLink::create(),
+            );
+        }
+
+        if ($this->debug) {
+            return HealthResult::critical(new TranslatableMessage('tmonier_platform_health.environment.app_debug.debug_in_prod'), null, DocumentationLink::create());
+        }
+
+        return HealthResult::ok(new TranslatableMessage('tmonier_platform_health.environment.app_debug.ok'));
+    }
+
+    private function displayableEnvironment(): string
+    {
+        return \in_array($this->environment, self::KNOWN_ENVIRONMENTS, true) ? $this->environment : 'other';
     }
 }

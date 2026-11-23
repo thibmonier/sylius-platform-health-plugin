@@ -5,3 +5,12 @@ tmonier_platform_health_admin_index:
     defaults:
         _controller: Symfony\Bundle\FrameworkBundle\Controller\TemplateController
         template: '@TmonierSyliusPlatformHealthPlugin/admin/index.html.twig'
+
+# Action link of the environment probes: they have no administration page, so they point to the documentation.
+tmonier_platform_health_documentation:
+    path: /platform-health/documentation
+    methods: [GET]
+    defaults:
+        _controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::urlAction
+        path: 'https://github.com/thibmonier/sylius-platform-health-plugin#environment-probes'
+        permanent: false

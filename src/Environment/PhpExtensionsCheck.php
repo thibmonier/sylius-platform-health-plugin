@@ -9,14 +9,21 @@ use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
-/**
- * Red stub (US-293).
- */
-final class PhpExtensionsCheck implements HealthCheckInterface
+final readonly class PhpExtensionsCheck implements HealthCheckInterface
 {
-    public function __construct(
-        public readonly ?\Closure $isLoaded = null,
-    ) {
+    private const REQUIRED = ['intl', 'mbstring', 'ctype', 'iconv', 'xml', 'curl', 'pdo'];
+
+    /** One of these is enough: Sylius generates its thumbnails with either. */
+    private const IMAGE = ['gd', 'imagick'];
+
+    private \Closure $isLoaded;
+
+    /**
+     * @param (\Closure(string): bool)|null $isLoaded
+     */
+    public function __construct(?\Closure $isLoaded = null)
+    {
+        $this->isLoaded = $isLoaded ?? \extension_loaded(...);
     }
 
     public function identifier(): string
@@ -31,6 +38,19 @@ final class PhpExtensionsCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        $missing = array_values(array_filter(self::REQUIRED, fn (string $extension): bool => !($this->isLoaded)($extension)));
+        if ([] === array_filter(self::IMAGE, fn (string $extension): bool => ($this->isLoaded)($extension))) {
+            $missing[] = implode('|', self::IMAGE);
+        }
+
+        if ([] === $missing) {
+            return HealthResult::ok(new TranslatableMessage('tmonier_platform_health.environment.extensions.ok'));
+        }
+
+        return HealthResult::critical(
+            new TranslatableMessage('tmonier_platform_health.environment.extensions.missing'),
+            new TranslatableMessage('tmonier_platform_health.environment.extensions.detail', ['%missing%' => implode(', ', $missing)]),
+            DocumentationLink::create(),
+        );
     }
 }

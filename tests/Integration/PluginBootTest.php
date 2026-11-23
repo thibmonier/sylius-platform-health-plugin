@@ -25,7 +25,7 @@ final class PluginBootTest extends KernelTestCase
         $runner = self::getContainer()->get('tmonier_sylius_platform_health.test.runner');
         self::assertInstanceOf(HealthCheckRunner::class, $runner);
 
-        $reports = $runner->run();
+        $reports = array_filter($runner->run(), static fn (HealthCheckReport $report): bool => !str_starts_with($report->identifier, 'environment.') || 'environment.demo' === $report->identifier);
 
         self::assertSame(
             [

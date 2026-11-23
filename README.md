@@ -9,7 +9,7 @@
 
 ## Status
 
-This version ships the **contract, the runner and the administration page**. The plugin ships **no real probe yet**: the page shows the probes that your application (or another plugin) declares, and an explanation when there is none. The screenshot below comes from the test application, with five demonstration probes that live in `tests/`, not in the package.
+This version ships the **contract, the runner, the administration page and six environment probes** (versions and end of support, extensions, OPcache, debug mode). The screenshot below comes from the test application, with five demonstration probes that live in `tests/`, not in the package.
 
 ## The administration page
 
@@ -38,6 +38,28 @@ tmonier_sylius_platform_health:
 ```
 
 The menu entry and the page hooks are registered by the plugin itself, nothing else to import.
+
+## Environment probes
+
+Six probes of the `environment` category, registered by the plugin itself (nothing to declare), read-only, **no network call**, no value of an environment variable ever displayed. Each non-`ok` result links to this documentation (`Fix`).
+
+| Identifier | Measures | Statuses |
+|---|---|---|
+| `environment.php_version` | PHP version and end of security support of its branch | `ok`; `warning` within 180 days of the end; `critical` the day after; `unknown` for a branch absent from the table |
+| `environment.symfony_version` | `Kernel::END_OF_MAINTENANCE` and `Kernel::END_OF_LIFE`, supplied by Symfony itself (no table) | same thresholds; `warning` once the maintenance has ended |
+| `environment.sylius_version` | Sylius version and end of support of its minor branch | same as PHP |
+| `environment.php_extensions` | `intl`, `mbstring`, `ctype`, `iconv`, `xml`, `curl`, `pdo`, `gd` or `imagick` | `ok`; `critical` listing **only the missing** extensions |
+| `environment.opcache` | OPcache active for the SAPI that serves the page | `ok`; `warning` if inactive; `unknown` if the API is restricted (`opcache.restrict_api`) |
+| `environment.app_debug` | `kernel.debug` and `kernel.environment` | `ok` in production without debug; `critical` with debug in production; `warning` outside production |
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    environment:
+        support_warning_days: 180   # PHP, Symfony and Sylius probes warn this many days before the end of support
+```
+
+**The end-of-support table** (`EndOfSupportTable`) is frozen in the code, so the administration never calls the network. Its version (`2026-12`) is displayed by the PHP and Sylius probes ("Table of 2026-12"). It is **renewed with every release of the plugin**; twelve months after its version, those two probes turn to `warning` ("dates table to renew") instead of a false `ok`. A PHP or Sylius branch absent from the table is `unknown` ("branch absent from the table"), never `ok`. The probes read the date through the Symfony `clock` service: tests inject a fixed clock.
 
 ## The contract
 

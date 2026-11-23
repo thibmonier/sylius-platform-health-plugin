@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusPlatformHealthPlugin\Environment;
 
-use Symfony\Component\Translation\TranslatableMessage;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
 /**
- * Red stub (US-293).
+ * Symfony publishes its own dates (Kernel::END_OF_MAINTENANCE and Kernel::END_OF_LIFE, as "MM/YYYY"): no table.
  */
-final class SymfonyVersionCheck implements HealthCheckInterface
+final readonly class SymfonyVersionCheck implements HealthCheckInterface
 {
     public function __construct(
-        public readonly SupportAssessor $assessor,
-        public readonly string $version,
-        public readonly string $endOfMaintenance,
-        public readonly string $endOfLife,
+        private SupportAssessor $assessor,
+        private string $version,
+        private string $endOfMaintenance,
+        private string $endOfLife,
     ) {
     }
 
@@ -34,6 +33,21 @@ final class SymfonyVersionCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        $maintenance = $this->lastDayOf($this->endOfMaintenance);
+        $life = $this->lastDayOf($this->endOfLife);
+        if (!$maintenance instanceof \DateTimeImmutable || !$life instanceof \DateTimeImmutable) {
+            return $this->assessor->unreadable('Symfony');
+        }
+
+        return $this->assessor->assessKernel('Symfony', $this->version, $maintenance, $life);
+    }
+
+    private function lastDayOf(string $monthYear): ?\DateTimeImmutable
+    {
+        if (1 !== preg_match('#^(0[1-9]|1[0-2])/(\d{4})$#', $monthYear, $matches)) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable(\sprintf('%s-%s-01', $matches[2], $matches[1]), new \DateTimeZone('UTC')))->modify('last day of this month');
     }
 }

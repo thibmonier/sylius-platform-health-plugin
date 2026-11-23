@@ -2,6 +2,30 @@ tmonier_platform_health:
     result:
         budget_exceeded: 'Budget de temps dépassé (%budget_ms% ms) : le contrôle n''est pas concluant.'
         check_failed: 'Le contrôle n''a pas pu aboutir : voir le journal de l''application.'
+    environment:
+        support:
+            ok: '%name% %version% : supporté jusqu''au %date% (%days% jours restants).'
+            warning: '%name% %version% : fin de support le %date% (%days% jours restants).'
+            critical: '%name% %version% : support terminé le %date%.'
+            branch_missing: '%name% %version% : branche absente de la table des fins de support.'
+            unreadable: '%name% : la version est illisible.'
+            table_stale: '%name% %version% : table de dates à renouveler (table du %table%).'
+            maintenance_ended: '%name% %version% : maintenance terminée, correctifs de sécurité jusqu''au %date% (%days% jours restants).'
+            detail:
+                table: 'Table du %table%.'
+                kernel: 'Dates fournies par Symfony lui-même.'
+        extensions:
+            ok: 'Toutes les extensions PHP requises sont chargées.'
+            missing: 'Des extensions PHP requises manquent.'
+            detail: 'Manquantes : %missing%.'
+        opcache:
+            ok: 'OPcache est actif.'
+            inactive: 'OPcache est inactif pour ce SAPI de PHP.'
+            restricted: 'L''état d''OPcache est illisible (API restreinte).'
+        app_debug:
+            ok: 'Environnement de production, mode debug désactivé.'
+            debug_in_prod: 'Le mode debug est actif en production.'
+            not_prod: 'L''application tourne dans l''environnement « %environment% », pas en production.'
     category:
         environment: Environnement
         data: Données

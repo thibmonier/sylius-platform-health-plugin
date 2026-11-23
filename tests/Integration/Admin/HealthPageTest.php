@@ -16,7 +16,8 @@ use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\ProbeExecutions;
 
 /**
  * The administration page, on the Sylius test application, with the five probes of tests/TestApplication
- * (one ok, one warning, one critical, one unknown, one that throws).
+ * (one ok, one warning, one critical, one unknown, one that throws), next to the six environment probes of the plugin
+ * (their clock is fixed by the test application: the page never depends on the date of the day).
  */
 final class HealthPageTest extends WebTestCase
 {
@@ -67,7 +68,7 @@ final class HealthPageTest extends WebTestCase
         $results = $this->deferredResults($this->client->request('GET', self::PAGE));
 
         self::assertSame(
-            ['shop:critical', 'data:warning', 'plugins:unknown', 'environment:ok'],
+            ['shop:critical', 'environment:warning', 'data:warning', 'plugins:unknown'],
             $results->filter('[data-test-health-category]')->each(static fn (Crawler $category): string => $category->attr('data-test-health-category') . ':' . $category->attr('data-test-health-status')),
         );
     }

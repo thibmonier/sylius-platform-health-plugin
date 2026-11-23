@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusPlatformHealthPlugin\Environment;
 
-use Symfony\Component\Translation\TranslatableMessage;
+use Sylius\Bundle\CoreBundle\SyliusCoreBundle;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
-/**
- * Red stub (US-293).
- */
-final class SyliusVersionCheck implements HealthCheckInterface
+final readonly class SyliusVersionCheck implements HealthCheckInterface
 {
     public function __construct(
-        public readonly SupportAssessor $assessor,
-        public readonly EndOfSupportTable $table,
-        public readonly ?string $version = null,
+        private SupportAssessor $assessor,
+        private EndOfSupportTable $table,
+        private ?string $version = null,
     ) {
     }
 
@@ -33,6 +30,12 @@ final class SyliusVersionCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        $version = $this->version ?? SyliusCoreBundle::VERSION;
+        $branch = VersionBranch::of($version);
+        if (null === $branch) {
+            return $this->assessor->unreadable('Sylius');
+        }
+
+        return $this->assessor->assessTable('Sylius', $version, $this->table->syliusSupportEnd($branch));
     }
 }

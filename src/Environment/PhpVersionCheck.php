@@ -4,20 +4,16 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusPlatformHealthPlugin\Environment;
 
-use Symfony\Component\Translation\TranslatableMessage;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
 
-/**
- * Red stub (US-293).
- */
-final class PhpVersionCheck implements HealthCheckInterface
+final readonly class PhpVersionCheck implements HealthCheckInterface
 {
     public function __construct(
-        public readonly SupportAssessor $assessor,
-        public readonly EndOfSupportTable $table,
-        public readonly ?string $version = null,
+        private SupportAssessor $assessor,
+        private EndOfSupportTable $table,
+        private ?string $version = null,
     ) {
     }
 
@@ -33,6 +29,12 @@ final class PhpVersionCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        return HealthResult::unknown(new TranslatableMessage('stub'));
+        $version = $this->version ?? \PHP_VERSION;
+        $branch = VersionBranch::of($version);
+        if (null === $branch) {
+            return $this->assessor->unreadable('PHP');
+        }
+
+        return $this->assessor->assessTable('PHP', $version, $this->table->phpSecurityEnd($branch));
     }
 }

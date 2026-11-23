@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+use Symfony\Component\HttpKernel\Kernel;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\AppDebugCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\EndOfSupportTable;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\NativeOpcacheStateReader;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\OpcacheCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\PhpExtensionsCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\PhpVersionCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\SupportAssessor;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\SyliusVersionCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\SymfonyVersionCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckRunner;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthSnapshotProvider;
@@ -57,5 +67,58 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
 
     $services->set('tmonier_sylius_platform_health.menu.admin', AdminMenuListener::class)
         ->tag('kernel.event_listener', ['event' => 'sylius.menu.admin.main'])
+    ;
+
+    // Environment probes (US-293): autoconfigured like any other probe, nothing to declare in the application.
+    $services->set('tmonier_sylius_platform_health.environment.end_of_support_table', EndOfSupportTable::class);
+
+    $services->set('tmonier_sylius_platform_health.environment.support_assessor', SupportAssessor::class)
+        ->args([
+            service('clock'),
+            service('tmonier_sylius_platform_health.environment.end_of_support_table'),
+            param('tmonier_sylius_platform_health.environment.support_warning_days'),
+        ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.php_version', PhpVersionCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.environment.support_assessor'),
+            service('tmonier_sylius_platform_health.environment.end_of_support_table'),
+        ])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.sylius_version', SyliusVersionCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.environment.support_assessor'),
+            service('tmonier_sylius_platform_health.environment.end_of_support_table'),
+        ])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.symfony_version', SymfonyVersionCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.environment.support_assessor'),
+            Kernel::VERSION,
+            Kernel::END_OF_MAINTENANCE,
+            Kernel::END_OF_LIFE,
+        ])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.php_extensions', PhpExtensionsCheck::class)
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.opcache_reader', NativeOpcacheStateReader::class);
+
+    $services->set('tmonier_sylius_platform_health.environment.opcache', OpcacheCheck::class)
+        ->args([service('tmonier_sylius_platform_health.environment.opcache_reader')])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.app_debug', AppDebugCheck::class)
+        ->args([param('kernel.debug'), param('kernel.environment')])
+        ->autoconfigure()
     ;
 };
