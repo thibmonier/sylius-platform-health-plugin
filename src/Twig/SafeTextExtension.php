@@ -33,9 +33,12 @@ final class SafeTextExtension extends AbstractExtension
         $raw = $text->trans($this->translator);
 
         if ($this->masker->looksLikeExecutionTrace($raw)) {
-            $this->logger->notice('Stub.');
+            // The probe is at fault, not the administrator: the log names it, and never carries the trace.
+            $this->logger->warning('Health check "{identifier}" returned an execution trace: hidden from the page.', ['identifier' => $identifier]);
+
+            return $this->translator->trans('tmonier_platform_health.result.detail_hidden');
         }
 
-        return $raw;
+        return $this->masker->mask($raw);
     }
 }

@@ -26,9 +26,9 @@
                             {% set action_url = tmonier_platform_health_action_url(result.action) %}
                             <li class="d-flex flex-wrap gap-2 align-items-baseline py-2 border-top" data-test-health-check="{{ report.identifier }}" data-test-health-status="{{ result.status.value }}">
                                 <span class="badge {{ badge_classes[result.status.value] }}">{{ ('tmonier_platform_health.status.' ~ result.status.value)|trans }}</span>
-                                <span data-test-health-summary>{{ result.summary|trans }}</span>
+                                <span data-test-health-summary>{{ tmonier_platform_health_text(result.summary, report.identifier) }}</span>
                                 {% if result.detail is not null %}
-                                    <small class="text-muted w-100" data-test-health-detail>{{ result.detail|trans }}</small>
+                                    <small class="text-muted w-100" data-test-health-detail>{{ tmonier_platform_health_text(result.detail, report.identifier) }}</small>
                                 {% endif %}
                                 {% if action_url is not null %}
                                     <a class="ms-auto" href="{{ action_url }}" data-test-health-action>{{ 'tmonier_platform_health.ui.fix'|trans }}</a>

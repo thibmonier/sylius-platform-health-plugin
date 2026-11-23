@@ -13,7 +13,7 @@ This version ships the **contract, the runner, the administration page and six e
 
 ## The administration page
 
-*Configuration > Platform health* (`/admin/platform-health`, protected by the Sylius admin firewall).
+*Configuration > Platform health* (`/admin/platform-health`, guarded by the `PLATFORM_HEALTH_VIEW` attribute, see [Access control](#access-control)).
 
 ![The platform health page: one card per category, the most severe first](docs/screenshots/platform-health-en.png)
 
@@ -35,9 +35,43 @@ tmonier_sylius_platform_health:
 tmonier_sylius_platform_health:
     time_budget_ms: 500   # per probe
     cache_ttl: 60         # seconds shared between administrators, 0 disables
+    access:
+        role: ROLE_ADMINISTRATION_ACCESS   # ROLE_PLATFORM_HEALTH_VIEW recommended in production
 ```
 
 The menu entry and the page hooks are registered by the plugin itself, nothing else to import.
+
+## Access control
+
+**By default every administrator sees the page** (`access.role` is `ROLE_ADMINISTRATION_ACCESS`, the behaviour of v0.1.0, so an upgrade breaks nothing). A diagnostic screen is a map of the installation (versions, paths, states of queues): **in production, set `access.role` to `ROLE_PLATFORM_HEALTH_VIEW`** and grant it one administrator at a time, with the command of Sylius itself:
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    access:
+        role: ROLE_PLATFORM_HEALTH_VIEW
+```
+
+```bash
+bin/console sylius:user:promote admin@example.com ROLE_PLATFORM_HEALTH_VIEW --user-type=admin
+```
+
+The administrator logs in again to carry the new role. The plugin ships no assignment command and no `role_hierarchy`: it does not rewrite the security of your application (a role you declared in your own `role_hierarchy` is honoured). A value that is not a role (it must start with `ROLE_`) fails the compilation of the container.
+
+The guard is a voter for the `PLATFORM_HEALTH_VIEW` attribute, set on the route of the page **and** on the Live Component class (`#[IsGranted]`): the component is also served under `/admin/{_locale}/_components/...`, which the administration only protects with `ROLE_ADMINISTRATION_ACCESS`. An administrator without the role gets a **403** on the page, on the component URL and on the refresh action, and the menu entry is hidden.
+
+### Sensitive values and execution traces
+
+Probes are written by third parties, so the page masks what a probe lets slip, in every summary and detail (a probe should still never produce a sensitive value):
+
+| Found in a summary or detail | Shown as |
+|------------------------------|----------|
+| DSN credentials (`mysql://shop:pass@db/sylius`) | `mysql://***@db/sylius` |
+| `secret`, `password`, `passwd`, `pwd`, `token`, `key`, `dsn` pairs (`password=hunter2`, `API_KEY: abc`) | `password=***`, `API_KEY: ***` |
+| 32+ character key containing a digit | `***` |
+| Absolute path inside the project | path relative to the project |
+| Other absolute file path | `.../file.ext` |
+| Execution trace (`Stack trace:`, `#0 /path/File.php(12): ...`) | "The detail was hidden: see the application log.", and the probe is logged by its identifier (never the trace) |
 
 ## Environment probes
 

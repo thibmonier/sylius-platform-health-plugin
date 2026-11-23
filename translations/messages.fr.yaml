@@ -2,6 +2,7 @@ tmonier_platform_health:
     result:
         budget_exceeded: 'Budget de temps dépassé (%budget_ms% ms) : le contrôle n''est pas concluant.'
         check_failed: 'Le contrôle n''a pas pu aboutir : voir le journal de l''application.'
+        detail_hidden: 'Le détail a été masqué : voir le journal de l''application.'
     environment:
         support:
             ok: '%name% %version% : supporté jusqu''au %date% (%days% jours restants).'

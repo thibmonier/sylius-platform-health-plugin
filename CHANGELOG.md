@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - `tmonier_sylius_platform_health.environment.support_warning_days` (180 by default).
 - Route `tmonier_platform_health_documentation`: action link of the environment probes (redirects to the README).
 - English and French translations of the probes.
+- `tmonier_sylius_platform_health.access.role` (US-290): role that the `PLATFORM_HEALTH_VIEW` attribute requires, `ROLE_ADMINISTRATION_ACCESS` by default (no change from v0.1.0). A value that does not start with `ROLE_` fails the compilation of the container. Production recommendation: `ROLE_PLATFORM_HEALTH_VIEW`, granted with `sylius:user:promote <email> ROLE_PLATFORM_HEALTH_VIEW --user-type=admin`.
+- `PlatformHealthVoter` for the `PLATFORM_HEALTH_VIEW` attribute; the menu entry is shown only to who holds the right.
+- `SensitiveValueMasker`: DSN credentials, `password=`-like pairs, long keys and absolute paths are masked in every summary and detail; an execution trace is replaced by a generic message and the faulty probe is logged by its identifier.
+
+### Security
+- The page, the Live Component endpoint (`/admin/{_locale}/_components/...`) and its refresh action are guarded by `PLATFORM_HEALTH_VIEW`: an administrator without the configured role gets a 403 (OWASP A01). With the default role the behaviour is unchanged.
+- Secrets and execution traces a probe lets slip are masked on the page (OWASP A02, A10).
 
 ## [0.1.0] - 2026-11-22
 

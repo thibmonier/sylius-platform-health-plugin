@@ -30,6 +30,6 @@ final class PlatformHealthVoter extends Voter
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
-        return [] === $this->roleHierarchy->getReachableRoleNames([$this->role]);
+        return \in_array($this->role, $this->roleHierarchy->getReachableRoleNames($token->getRoleNames()), true);
     }
 }

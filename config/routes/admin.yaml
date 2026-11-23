@@ -1,10 +1,10 @@
-# Under the administration prefix: the Sylius admin firewall (ROLE_ADMINISTRATION_ACCESS) protects the page.
+# Under the administration prefix, so the firewall asks for ROLE_ADMINISTRATION_ACCESS; the controller adds the
+# PLATFORM_HEALTH_VIEW guard (access.role), which answers 403 to an administrator who lacks it.
 tmonier_platform_health_admin_index:
     path: /platform-health
     methods: [GET]
     defaults:
-        _controller: Symfony\Bundle\FrameworkBundle\Controller\TemplateController
-        template: '@TmonierSyliusPlatformHealthPlugin/admin/index.html.twig'
+        _controller: tmonier_sylius_platform_health.controller.page
 
 # Action link of the environment probes: they have no administration page, so they point to the documentation.
 tmonier_platform_health_documentation:

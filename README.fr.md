@@ -13,7 +13,7 @@ Cette version livre le **contrat, l'exécuteur, la page d'administration et six 
 
 ## La page d'administration
 
-*Configuration > Santé de la plateforme* (`/admin/platform-health`, protégée par le pare-feu d'administration de Sylius).
+*Configuration > Santé de la plateforme* (`/admin/platform-health`, gardée par l'attribut `PLATFORM_HEALTH_VIEW`, voir [Contrôle d'accès](#contrôle-daccès)).
 
 ![La page Santé de la plateforme : une carte par catégorie, la plus grave en premier](docs/screenshots/platform-health-fr.png)
 
@@ -35,9 +35,43 @@ tmonier_sylius_platform_health:
 tmonier_sylius_platform_health:
     time_budget_ms: 500   # par sonde
     cache_ttl: 60         # secondes mutualisées entre administrateurs, 0 désactive
+    access:
+        role: ROLE_ADMINISTRATION_ACCESS   # ROLE_PLATFORM_HEALTH_VIEW recommandé en production
 ```
 
 L'entrée de menu et les hooks de la page sont enregistrés par le plugin lui-même, rien d'autre à importer.
+
+## Contrôle d'accès
+
+**Par défaut, tout administrateur voit la page** (`access.role` vaut `ROLE_ADMINISTRATION_ACCESS`, le comportement de la v0.1.0 : une mise à jour ne casse rien). Un écran de diagnostic est une carte de l'installation (versions, chemins, états des files) : **en production, réglez `access.role` sur `ROLE_PLATFORM_HEALTH_VIEW`** et accordez-le administrateur par administrateur, avec la commande de Sylius lui-même :
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    access:
+        role: ROLE_PLATFORM_HEALTH_VIEW
+```
+
+```bash
+bin/console sylius:user:promote admin@example.com ROLE_PLATFORM_HEALTH_VIEW --user-type=admin
+```
+
+L'administrateur se reconnecte pour porter le nouveau rôle. Le plugin ne fournit ni commande d'attribution ni `role_hierarchy` : il ne réécrit pas la sécurité de votre application (un rôle déclaré dans votre propre `role_hierarchy` est respecté). Une valeur qui n'est pas un rôle (elle doit commencer par `ROLE_`) fait échouer la compilation du conteneur.
+
+Le garde est un *voter* de l'attribut `PLATFORM_HEALTH_VIEW`, posé sur la route de la page **et** sur la classe du Live Component (`#[IsGranted]`) : le composant est aussi servi sous `/admin/{_locale}/_components/...`, que l'administration ne protège qu'avec `ROLE_ADMINISTRATION_ACCESS`. Un administrateur sans le rôle reçoit un **403** sur la page, sur l'URL du composant et sur l'action de rafraîchissement, et l'entrée de menu est masquée.
+
+### Valeurs sensibles et traces d'exécution
+
+Les sondes sont écrites par des tiers : la page masque ce qu'une sonde laisse échapper, dans chaque résumé et détail (une sonde ne doit pourtant jamais produire de valeur sensible) :
+
+| Trouvé dans un résumé ou un détail | Affiché |
+|------------------------------------|---------|
+| Identifiants d'un DSN (`mysql://shop:pass@db/sylius`) | `mysql://***@db/sylius` |
+| Paires `secret`, `password`, `passwd`, `pwd`, `token`, `key`, `dsn` (`password=hunter2`, `API_KEY: abc`) | `password=***`, `API_KEY: ***` |
+| Clé de 32 caractères ou plus contenant un chiffre | `***` |
+| Chemin absolu dans le projet | chemin relatif au projet |
+| Autre chemin absolu de fichier | `.../fichier.ext` |
+| Trace d'exécution (`Stack trace:`, `#0 /chemin/File.php(12): ...`) | « Le détail a été masqué : voir le journal de l'application. », et la sonde est journalisée par son identifiant (jamais la trace) |
 
 ## Sondes d'environnement
 

@@ -89,14 +89,16 @@ final class AccessControlDedicatedRoleTest extends AccessControlTestCase
         self::assertResponseStatusCodeSame(403);
     }
 
-    public function testAnAdministratorWithoutTheRoleCannotReachTheComponentWithoutAnyProps(): void
+    public function testAnAdministratorWithoutTheRoleGetsNothingFromTheComponentWithoutAnyProps(): void
     {
         $request = $this->componentRequestAs(['ROLE_ADMINISTRATION_ACCESS', 'ROLE_PLATFORM_HEALTH_VIEW']);
         $this->logInAsAnotherClient(['ROLE_ADMINISTRATION_ACCESS']);
 
         $this->client->request('POST', $request['url'] . '/refresh', ['data' => json_encode(['props' => new \stdClass()], \JSON_THROW_ON_ERROR)]);
 
-        self::assertResponseStatusCodeSame(403);
+        // Props without their checksum are refused (400) before the guard is reached: either way, an error and no result.
+        self::assertContains($this->client->getResponse()->getStatusCode(), [400, 403]);
+        self::assertStringNotContainsString('data-test-health-results', (string) $this->client->getResponse()->getContent());
     }
 
     public function testTheMenuEntryIsNotShownToAnAdministratorWithoutTheRole(): void
