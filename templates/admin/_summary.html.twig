@@ -1,41 +1,61 @@
-{% set badge_classes = { critical: 'bg-danger text-white', warning: 'bg-warning text-dark', unknown: 'bg-light text-dark border', ok: 'bg-success text-white' } %}
+{% import '@TmonierSyliusPlatformHealthPlugin/admin/_status.html.twig' as status %}
 
 {% if categories is empty %}
-    <div class="card" data-test-health-empty>
+    <div class="card tph-card" data-test-health-empty>
         <div class="card-body">
             <h2 class="h4">{{ 'tmonier_platform_health.ui.empty.title'|trans }}</h2>
             <p class="mb-0">
                 {{ 'tmonier_platform_health.ui.empty.body'|trans }}
-                <a href="https://github.com/thibmonier/sylius-platform-health-plugin#your-own-probe-in-fifteen-lines" target="_blank" rel="noopener noreferrer">{{ 'tmonier_platform_health.ui.empty.documentation'|trans }}</a>
+                <a class="tph-link" href="https://github.com/thibmonier/sylius-platform-health-plugin#your-own-probe-in-fifteen-lines" target="_blank" rel="noopener noreferrer">{{ 'tmonier_platform_health.ui.empty.documentation'|trans }}</a>
             </p>
         </div>
     </div>
 {% else %}
     {% for summary in categories %}
-        <section class="card mb-3" data-test-health-category="{{ summary.category.value }}" data-test-health-status="{{ summary.status.value }}">
+        {% set category_label = ('tmonier_platform_health.category.' ~ summary.category.value)|trans %}
+        <section class="card tph-card mb-3" data-test-health-category="{{ summary.category.value }}" data-test-health-status="{{ summary.status.value }}">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2 class="card-title h4 mb-0">{{ ('tmonier_platform_health.category.' ~ summary.category.value)|trans }}</h2>
-                <span class="badge {{ badge_classes[summary.status.value] }}">{{ ('tmonier_platform_health.status.' ~ summary.status.value)|trans }}</span>
+                <h2 class="card-title h4 mb-0">{{ category_label }}</h2>
+                {{ status.category(summary.status.value) }}
             </div>
             <div class="card-body">
                 <details data-test-health-details>
                     <summary>{{ 'tmonier_platform_health.ui.checks'|trans({'%count%': summary.reports|length}) }}</summary>
-                    <ul class="list-unstyled mt-3 mb-0">
-                        {% for report in summary.reports %}
-                            {% set result = report.result %}
-                            {% set action_url = tmonier_platform_health_action_url(result.action) %}
-                            <li class="d-flex flex-wrap gap-2 align-items-baseline py-2 border-top" data-test-health-check="{{ report.identifier }}" data-test-health-status="{{ result.status.value }}">
-                                <span class="badge {{ badge_classes[result.status.value] }}">{{ ('tmonier_platform_health.status.' ~ result.status.value)|trans }}</span>
-                                <span data-test-health-summary>{{ tmonier_platform_health_text(result.summary, report.identifier) }}</span>
-                                {% if result.detail is not null %}
-                                    <small class="text-muted w-100" data-test-health-detail>{{ tmonier_platform_health_text(result.detail, report.identifier) }}</small>
-                                {% endif %}
-                                {% if action_url is not null %}
-                                    <a class="ms-auto" href="{{ action_url }}" data-test-health-action>{{ 'tmonier_platform_health.ui.fix'|trans }}</a>
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <div class="table-responsive mt-3">
+                        <table class="table tph-table align-middle mb-0">
+                            <caption class="visually-hidden">{{ 'tmonier_platform_health.ui.caption'|trans({'%category%': category_label}) }}</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">{{ 'tmonier_platform_health.ui.column.check'|trans }}</th>
+                                    <th scope="col">{{ 'tmonier_platform_health.ui.column.status'|trans }}</th>
+                                    <th scope="col">{{ 'tmonier_platform_health.ui.column.summary'|trans }}</th>
+                                    <th scope="col">{{ 'tmonier_platform_health.ui.column.action'|trans }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in summary.reports %}
+                                    {% set result = report.result %}
+                                    {% set action_url = tmonier_platform_health_action_url(result.action) %}
+                                    {% set summary_text = tmonier_platform_health_text(result.summary, report.identifier) %}
+                                    <tr data-test-health-check="{{ report.identifier }}" data-test-health-status="{{ result.status.value }}">
+                                        <th scope="row" class="fw-normal"><code>{{ report.identifier }}</code></th>
+                                        <td>{{ status.check(result.status.value) }}</td>
+                                        <td>
+                                            <span data-test-health-summary>{{ summary_text }}</span>
+                                            {% if result.detail is not null %}
+                                                <small class="tph-muted d-block" data-test-health-detail>{{ tmonier_platform_health_text(result.detail, report.identifier) }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if action_url is not null %}
+                                                <a class="tph-link" href="{{ action_url }}" data-test-health-action>{{ 'tmonier_platform_health.ui.fix'|trans }}<span class="visually-hidden">: {{ summary_text }}</span></a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </details>
             </div>
         </section>

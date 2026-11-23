@@ -46,6 +46,13 @@ tmonier_platform_health:
         refresh: Refresh
         checks: '{1} 1 check|]1,Inf[ %count% checks'
         fix: Fix
+        caption: 'Checks of the category %category%'
+        updated: 'Results updated. Measured at %time%.'
+        column:
+            check: Check
+            status: Status
+            summary: Summary
+            action: Action
         empty:
             title: No health check is installed
             body: 'The plugin ships no diagnostic of its own: each check is a class that implements HealthCheckInterface.'

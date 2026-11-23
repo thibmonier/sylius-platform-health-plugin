@@ -1,7 +1,7 @@
 {% macro placeholder() %}
-    <div class="card" role="status" data-test-health-skeleton>
-        <div class="card-body text-muted">
-            <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+    <div class="card tph-card" role="status" aria-busy="true" data-test-health-skeleton>
+        <div class="card-body tph-muted">
+            <span class="tph-spinner" aria-hidden="true"></span>
             {{ 'tmonier_platform_health.ui.loading'|trans }}
         </div>
     </div>
@@ -10,11 +10,16 @@
 <div {{ attributes }} data-test-health-results>
     {% set snapshot = this.snapshot %}
 
+    {# Live region, always present: its text changes at each render (the time), so the update is announced politely, without moving the focus. #}
+    <div class="visually-hidden" role="status" aria-live="polite" data-test-health-announcement>
+        {{ 'tmonier_platform_health.ui.updated'|trans({'%time%': snapshot.generatedAt|date('H:i:s')}) }}
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <p class="text-muted mb-0" data-test-health-generated-at>
+        <p class="tph-muted mb-0" data-test-health-generated-at>
             {{ 'tmonier_platform_health.ui.generated_at'|trans({'%time%': snapshot.generatedAt|date('H:i:s')}) }}
         </p>
-        <button type="button" class="btn btn-outline-primary btn-sm" data-action="live#action" data-live-action-param="refresh" data-test-health-refresh>
+        <button type="button" id="tmonier-platform-health-refresh" class="btn btn-sm tph-button" data-action="live#action" data-live-action-param="refresh" data-test-health-refresh>
             {{ 'tmonier_platform_health.ui.refresh'|trans }}
         </button>
     </div>

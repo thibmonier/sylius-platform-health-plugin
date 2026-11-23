@@ -73,6 +73,17 @@ Probes are written by third parties, so the page masks what a probe lets slip, i
 | Other absolute file path | `.../file.ext` |
 | Execution trace (`Stack trace:`, `#0 /path/File.php(12): ...`) | "The detail was hidden: see the application log.", and the probe is logged by its identifier (never the trace) |
 
+## Accessibility
+
+The page targets **WCAG 2.2 level AA** (the target of the administration theme, not AAA).
+
+- **A status is never carried by colour alone**: each category and each probe spells it out ("OK", "Warning", "Critical", "Not measurable") next to an icon whose *shape* differs for each status (check, triangle, octagon, question mark). The icons are decorative (`aria-hidden`), the word carries the meaning.
+- **The detail is a real table**: `<caption>`, `scope="col"` headers, one `scope="row"` header per probe, inside a native `<details>`/`<summary>` (keyboard and screen reader for free). An action link reads "Fix: <summary of the probe>", not "click here".
+- **Refreshing is announced**: a `role="status"` region (`aria-live="polite"`) says "Results updated" with the time of the measure, the focus stays on the **Refresh** button, and the results carry `aria-busy="true"` while the probes run (set by the small script of the plugin's admin entrypoint). The loading skeleton honours `prefers-reduced-motion`.
+- **Light and dark theme**: the colours are CSS variables (`--tph-*`) that follow `data-bs-theme` of the administration (Tabler), declared once in `templates/admin/_tokens.html.twig`; no template carries a colour. Every pair (text on surface, label on badge, icon on badge, border on surface) is **measured** by `tests/Unit/Accessibility/StatusContrastTest.php`, which fails with the token, the background and the ratio found when text drops under 4.5:1 or an icon or border under 3:1, in both themes. Change a token together with that test.
+
+What is not covered: AAA, right-to-left, forced colours beyond a manual look. The tests prove the markup and the contrast; a screen reader pass remains a manual check.
+
 ## Environment probes
 
 Six probes of the `environment` category, registered by the plugin itself (nothing to declare), read-only, **no network call**, no value of an environment variable ever displayed. Each non-`ok` result links to this documentation (`Fix`).

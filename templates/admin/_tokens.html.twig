@@ -1,0 +1,156 @@
+{# Colour tokens and styles of the platform health page (US-291). Included once by the page, never by the Live Component.
+   The administration of Sylius 2 (Tabler) switches the theme with data-bs-theme on <html>: the tokens follow it, and no
+   template carries a colour of its own. Every pair is measured by tests/Unit/Accessibility/StatusContrastTest (WCAG 2.2 AA:
+   4.5:1 for text, 3:1 for icons and borders), so a token is changed together with that test. #}
+<style>
+    :root,
+    [data-bs-theme="light"] {
+        --tph-surface: #ffffff;
+        --tph-text: #1f2937;
+        --tph-muted: #4b5563;
+        --tph-link: #1d4ed8;
+        --tph-ok-text: #14532d;
+        --tph-ok-bg: #dcfce7;
+        --tph-ok-icon: #166534;
+        --tph-ok-border: #15803d;
+        --tph-warning-text: #78350f;
+        --tph-warning-bg: #fef3c7;
+        --tph-warning-icon: #92400e;
+        --tph-warning-border: #b45309;
+        --tph-critical-text: #7f1d1d;
+        --tph-critical-bg: #fee2e2;
+        --tph-critical-icon: #991b1b;
+        --tph-critical-border: #b91c1c;
+        --tph-unknown-text: #1f2937;
+        --tph-unknown-bg: #e5e7eb;
+        --tph-unknown-icon: #374151;
+        --tph-unknown-border: #6b7280;
+    }
+
+    [data-bs-theme="dark"] {
+        --tph-surface: #182433;
+        --tph-text: #e5e7eb;
+        --tph-muted: #9ca3af;
+        --tph-link: #93c5fd;
+        --tph-ok-text: #bbf7d0;
+        --tph-ok-bg: #14532d;
+        --tph-ok-icon: #86efac;
+        --tph-ok-border: #4ade80;
+        --tph-warning-text: #fde68a;
+        --tph-warning-bg: #78350f;
+        --tph-warning-icon: #fcd34d;
+        --tph-warning-border: #fbbf24;
+        --tph-critical-text: #fecaca;
+        --tph-critical-bg: #7f1d1d;
+        --tph-critical-icon: #fca5a5;
+        --tph-critical-border: #f87171;
+        --tph-unknown-text: #e5e7eb;
+        --tph-unknown-bg: #374151;
+        --tph-unknown-icon: #d1d5db;
+        --tph-unknown-border: #9ca3af;
+    }
+
+    .tph-card {
+        background: var(--tph-surface);
+        color: var(--tph-text);
+    }
+
+    .tph-muted {
+        color: var(--tph-muted);
+    }
+
+    .tph-link {
+        color: var(--tph-link);
+        text-decoration: underline;
+    }
+
+    .tph-link:focus-visible,
+    .tph-button:focus-visible,
+    .tph-card button:focus-visible,
+    .tph-card summary:focus-visible {
+        outline: 2px solid var(--tph-link);
+        outline-offset: 2px;
+    }
+
+    .tph-table {
+        --bs-table-color: var(--tph-text);
+        --bs-table-bg: transparent;
+        --tblr-table-color: var(--tph-text);
+        --tblr-table-bg: transparent;
+        color: var(--tph-text);
+    }
+
+    .tph-table thead th {
+        background: var(--tph-surface);
+        color: var(--tph-muted);
+    }
+
+    .tph-button {
+        background: transparent;
+        border: 1px solid var(--tph-link);
+        color: var(--tph-link);
+    }
+
+    .tph-button:hover {
+        background: var(--tph-link);
+        color: var(--tph-surface);
+    }
+
+    .tph-table caption {
+        color: var(--tph-muted);
+    }
+
+    .tph-status {
+        display: inline-flex;
+        align-items: center;
+        gap: .375rem;
+        padding: .125rem .5rem;
+        border: 1px solid;
+        border-radius: .25rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .tph-status svg {
+        width: 1.125em;
+        height: 1.125em;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .tph-status--ok { background: var(--tph-ok-bg); border-color: var(--tph-ok-border); color: var(--tph-ok-text); }
+    .tph-status--ok svg { color: var(--tph-ok-icon); }
+    .tph-status--warning { background: var(--tph-warning-bg); border-color: var(--tph-warning-border); color: var(--tph-warning-text); }
+    .tph-status--warning svg { color: var(--tph-warning-icon); }
+    .tph-status--critical { background: var(--tph-critical-bg); border-color: var(--tph-critical-border); color: var(--tph-critical-text); }
+    .tph-status--critical svg { color: var(--tph-critical-icon); }
+    .tph-status--unknown { background: var(--tph-unknown-bg); border-color: var(--tph-unknown-border); color: var(--tph-unknown-text); }
+    .tph-status--unknown svg { color: var(--tph-unknown-icon); }
+
+    .tph-spinner {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        margin-right: .5rem;
+        vertical-align: -.125em;
+        border: 2px solid var(--tph-muted);
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: tph-spin .75s linear infinite;
+    }
+
+    @keyframes tph-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tph-spinner {
+            animation: none;
+            border-right-color: var(--tph-muted);
+        }
+    }
+</style>
