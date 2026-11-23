@@ -1,0 +1,7 @@
+# The same test application, with the dedicated role required by the plugin (access.role).
+imports:
+    - { resource: "config.yaml" }
+
+tmonier_sylius_platform_health:
+    access:
+        role: ROLE_PLATFORM_HEALTH_VIEW

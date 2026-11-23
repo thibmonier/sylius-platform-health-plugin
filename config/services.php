@@ -16,9 +16,13 @@ use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckRunner;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthSnapshotProvider;
 use Tmonier\SyliusPlatformHealthPlugin\Menu\AdminMenuListener;
+use Tmonier\SyliusPlatformHealthPlugin\Controller\HealthPageController;
+use Tmonier\SyliusPlatformHealthPlugin\Security\PlatformHealthVoter;
+use Tmonier\SyliusPlatformHealthPlugin\Security\SensitiveValueMasker;
 use Tmonier\SyliusPlatformHealthPlugin\Summary\HealthSummaryBuilder;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\ActionUrlExtension;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\Component\HealthComponent;
+use Tmonier\SyliusPlatformHealthPlugin\Twig\SafeTextExtension;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -65,7 +69,31 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
         ->tag('twig.extension')
     ;
 
+    $services->set('tmonier_sylius_platform_health.twig.safe_text', SafeTextExtension::class)
+        ->args([
+            service('translator'),
+            service('tmonier_sylius_platform_health.security.masker'),
+            service('logger'),
+        ])
+        ->tag('twig.extension')
+    ;
+
+    $services->set('tmonier_sylius_platform_health.security.masker', SensitiveValueMasker::class)
+        ->args([param('kernel.project_dir')])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.security.voter', PlatformHealthVoter::class)
+        ->args([service('security.role_hierarchy'), param('tmonier_sylius_platform_health.access.role')])
+        ->tag('security.voter')
+    ;
+
+    $services->set('tmonier_sylius_platform_health.controller.page', HealthPageController::class)
+        ->args([service('twig')])
+        ->tag('controller.service_arguments')
+    ;
+
     $services->set('tmonier_sylius_platform_health.menu.admin', AdminMenuListener::class)
+        ->args([service('security.authorization_checker')])
         ->tag('kernel.event_listener', ['event' => 'sylius.menu.admin.main'])
     ;
 

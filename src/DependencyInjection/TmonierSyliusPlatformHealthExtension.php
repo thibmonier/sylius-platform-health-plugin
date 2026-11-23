@@ -16,11 +16,12 @@ final class TmonierSyliusPlatformHealthExtension extends Extension implements Pr
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{time_budget_ms: int, cache_ttl: int, environment: array{support_warning_days: int}} $config */
+        /** @var array{time_budget_ms: int, cache_ttl: int, access: array{role: string}, environment: array{support_warning_days: int}} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('tmonier_sylius_platform_health.time_budget_ms', $config['time_budget_ms']);
         $container->setParameter('tmonier_sylius_platform_health.cache_ttl', $config['cache_ttl']);
+        $container->setParameter('tmonier_sylius_platform_health.access.role', $config['access']['role']);
         $container->setParameter('tmonier_sylius_platform_health.environment.support_warning_days', $config['environment']['support_warning_days']);
         $container->registerForAutoconfiguration(HealthCheckInterface::class)->addTag(HealthCheckInterface::TAG);
 
