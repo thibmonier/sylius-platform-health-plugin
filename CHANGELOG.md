@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-23
+
 ### Added
 - Six environment probes (US-293), registered by the plugin: `environment.php_version`, `environment.symfony_version`, `environment.sylius_version`, `environment.php_extensions`, `environment.opcache`, `environment.app_debug`. Read-only, no network call, no environment variable value rendered.
 - `EndOfSupportTable`: end-of-support dates of PHP and Sylius frozen in the code, version `2026-12` displayed by the probes; a table older than 12 months turns them to `warning`, a branch absent from it is `unknown`. Symfony uses its own `Kernel::END_OF_MAINTENANCE` and `END_OF_LIFE`.
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 - The status badges and the Refresh button use the plugin's own tokens instead of the Bootstrap utility classes (`bg-success`, `btn-outline-primary`...), whose contrast was below 4.5:1 in the light theme.
+- `symfony/security-core` and `symfony/security-http` are now required (voter and `#[IsGranted]` guards).
 
 ### Security
 - The page, the Live Component endpoint (`/admin/{_locale}/_components/...`) and its refresh action are guarded by `PLATFORM_HEALTH_VIEW`: an administrator without the configured role gets a 403 (OWASP A01). With the default role the behaviour is unchanged.
@@ -38,5 +41,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Shared short cache of the results (`cache_ttl`, 60 seconds by default, 0 disables it) and a "Refresh" action that ignores the cache and replaces it.
 - English and French translations of the page, README section and screenshots (the demonstration probes live in the test application).
 
-[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/thibmonier/sylius-platform-health-plugin/releases/tag/v0.1.0
