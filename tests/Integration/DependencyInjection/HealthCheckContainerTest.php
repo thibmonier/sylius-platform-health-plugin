@@ -6,6 +6,7 @@ namespace Tests\Tmonier\SyliusPlatformHealthPlugin\Integration\DependencyInjecti
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoEnvironmentCheck;
@@ -30,7 +31,7 @@ final class HealthCheckContainerTest extends TestCase
     {
         $container = $this->container(DemoEnvironmentCheck::class, DemoDataCheck::class, DemoShopCheck::class);
 
-        $reports = $this->runner($container)->run();
+        $reports = $this->applicationReports($container);
 
         self::assertSame(
             [
@@ -42,9 +43,10 @@ final class HealthCheckContainerTest extends TestCase
         );
     }
 
-    public function testAProjectWithoutAnyCheckGetsAnEmptyCollection(): void
+    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheSixEnvironmentChecksOfThePlugin(): void
     {
-        self::assertSame([], $this->runner($this->container())->run());
+        self::assertSame([], $this->applicationReports($this->container()));
+        self::assertCount(6, $this->runner($this->container())->run());
     }
 
     public function testTwoChecksWithTheSameIdentifierFailTheCompilationNamingTheIdentifierAndBothClasses(): void
@@ -85,6 +87,10 @@ final class HealthCheckContainerTest extends TestCase
         $container->registerExtension(new TmonierSyliusPlatformHealthExtension());
         $container->loadFromExtension('tmonier_sylius_platform_health');
         $container->register('logger', NullLogger::class);
+        // The environment probes of the plugin read the date through the clock service and two kernel parameters.
+        $container->register('clock', NativeClock::class);
+        $container->setParameter('kernel.debug', false);
+        $container->setParameter('kernel.environment', 'test');
         foreach ($checkClasses as $checkClass) {
             $container->register($checkClass, $checkClass)->setAutoconfigured(true);
         }
@@ -103,6 +109,17 @@ final class HealthCheckContainerTest extends TestCase
         }
 
         return null;
+    }
+
+    /**
+     * @return list<HealthCheckReport> the reports of the checks of the application, without the six of the plugin
+     */
+    private function applicationReports(ContainerBuilder $container): array
+    {
+        return array_values(array_filter(
+            $this->runner($container)->run(),
+            static fn (HealthCheckReport $report): bool => !str_starts_with($report->identifier, 'environment.') || 'environment.demo' === $report->identifier,
+        ));
     }
 
     private function runner(ContainerBuilder $container): HealthCheckRunner

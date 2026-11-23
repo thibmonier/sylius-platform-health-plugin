@@ -24,6 +24,16 @@ final class Configuration implements ConfigurationInterface
                     ->defaultValue(60)
                     ->min(0)
                 ->end()
+                ->arrayNode('environment')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->integerNode('support_warning_days')
+                            ->info('Days before the end of support of PHP, Symfony or Sylius from which the environment probes warn.')
+                            ->defaultValue(180)
+                            ->min(0)
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 
