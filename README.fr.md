@@ -9,19 +9,23 @@
 
 ## État
 
-Cette version livre le **contrat, l'exécuteur, la page d'administration et six sondes d'environnement** (versions et fin de support, extensions, OPcache, mode debug). La capture ci-dessous vient de l'application de test, avec cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration et six sondes d'environnement** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
 *Configuration > Santé de la plateforme* (`/admin/platform-health`, gardée par l'attribut `PLATFORM_HEALTH_VIEW`, voir [Contrôle d'accès](#contrôle-daccès)).
 
-![La page Santé de la plateforme : une carte par catégorie, la plus grave en premier](docs/screenshots/platform-health-fr.png)
+![La page Santé de la plateforme, thème clair : une carte par catégorie, la plus grave en premier](docs/screenshots/platform-health-fr-light.png)
+
+![La même page en thème sombre](docs/screenshots/platform-health-fr-dark.png)
+
+La page en anglais : [clair](docs/screenshots/platform-health-en-light.png), [sombre](docs/screenshots/platform-health-en-dark.png).
 
 - **Synthèse par catégorie.** Chaque catégorie prend le pire statut de ses sondes (`critical`, `warning`, `unknown`, `ok`) : la catégorie qui contient une sonde critique passe en premier. Une sonde `unknown` s'affiche « Non mesurable » avec son motif court ; elle ne compte jamais comme critique, et ne laisse jamais une catégorie « OK ».
 - **Détail par sonde, replié par défaut** : statut (toujours écrit en toutes lettres, jamais porté par la seule couleur), résumé, détail et **lien d'action** de la sonde, construit depuis le nom de route et les paramètres de son `HealthActionLink`. Une sonde qui pointe vers une route inexistante n'a pas de lien, pas d'erreur.
 - **Rendu différé** (Live Component Symfony UX, `loading="defer"`) : la page répond tout de suite avec un squelette, les résultats arrivent juste après. Aucune sonde ne s'exécute pendant la construction du squelette.
 - **Cache court mutualisé** : les résultats sont conservés `cache_ttl` secondes (60 par défaut, `0` désactive le cache) : trois administrateurs devant la page n'exécutent les sondes qu'une fois. Le bouton **Rafraîchir** les exécute à nouveau et remplace le cache.
-- **Aucune sonde installée** : la page le dit et renvoie à cette documentation, elle n'est ni vide ni en erreur.
+- **Aucun contrôle installé** : la page le dit et renvoie à cette documentation, elle n'est ni vide ni en erreur.
 - Une sonde défaillante ne casse jamais la page et le message de son exception n'est jamais affiché (il va au journal de l'application).
 
 ```yaml
@@ -167,6 +171,13 @@ composer require tmonier/sylius-platform-health-plugin
 ```
 
 Enregistrez `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` dans `config/bundles.php` et importez les routes (voir plus haut). Toutes les commandes de développement passent par Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`) ; la base est le MySQL de `sylius-b2b-demo`, dans une base au nom du plugin.
+
+## Démo B2B
+
+Ce plugin fait partie du travail présenté dans la [démo B2B Sylius](https://github.com/thibmonier/sylius-b2b-demo) : une boutique Sylius 2 avec des données d'exemple fictives, où les plugins B2B fonctionnent ensemble. Il n'est pas encore installé dans la démo en ligne.
+
+- Démo en ligne : [sylius-b2b.thibaut-monier.fr](https://sylius-b2b.thibaut-monier.fr)
+- Auteur : [Thibaut Monier](https://www.linkedin.com/in/thibautmonier/)
 
 ## Licence
 

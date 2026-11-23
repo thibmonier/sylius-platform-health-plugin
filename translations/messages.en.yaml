@@ -41,7 +41,7 @@ tmonier_platform_health:
     ui:
         menu: Platform health
         title: Platform health
-        loading: Checking the platform...
+        loading: Checking the platform…
         generated_at: 'Measured at %time%.'
         refresh: Refresh
         checks: '{1} 1 check|]1,Inf[ %count% checks'
@@ -55,5 +55,5 @@ tmonier_platform_health:
             action: Action
         empty:
             title: No health check is installed
-            body: 'The plugin ships no diagnostic of its own: each check is a class that implements HealthCheckInterface.'
+            body: 'Add your own: a check is a class that implements HealthCheckInterface.'
             documentation: See the documentation

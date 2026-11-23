@@ -41,7 +41,7 @@ tmonier_platform_health:
     ui:
         menu: Santé de la plateforme
         title: Santé de la plateforme
-        loading: Vérification de la plateforme...
+        loading: Vérification de la plateforme…
         generated_at: 'Mesuré à %time%.'
         refresh: Rafraîchir
         checks: '{1} 1 contrôle|]1,Inf[ %count% contrôles'
@@ -54,6 +54,6 @@ tmonier_platform_health:
             summary: Résumé
             action: Action
         empty:
-            title: Aucune sonde n''est installée
-            body: 'Le plugin ne fournit aucun diagnostic : chaque contrôle est une classe qui implémente HealthCheckInterface.'
+            title: Aucun contrôle de santé n''est installé
+            body: 'Ajoutez le vôtre : un contrôle est une classe qui implémente HealthCheckInterface.'
             documentation: Voir la documentation

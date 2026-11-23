@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+- Translations (EN, FR) reviewed: the empty-state text no longer claims that the plugin ships no diagnostic of its own, the French empty-state title says "contrôle" like the rest of the page, and the loading text uses the ellipsis character.
+- README (EN, FR) rewritten for the shipped version: environment probes, `access.role` and `ROLE_PLATFORM_HEALTH_VIEW`, accessibility, link to the demo and to the author; real screenshots (French and English, light and dark theme, 1280 px) taken on the test application.
+
+### Fixed
+- The French and English catalogues are now guarded by tests: same keys and placeholders in both languages, no key referenced by the code or the templates missing, no unused key, and a wording rule (check/contrôle vocabulary, no stale text). They run in the unit and non-unit suites.
+
 ## [0.2.0] - 2026-11-23
 
 ### Added

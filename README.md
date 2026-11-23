@@ -9,19 +9,23 @@
 
 ## Status
 
-This version ships the **contract, the runner, the administration page and six environment probes** (versions and end of support, extensions, OPcache, debug mode). The screenshot below comes from the test application, with five demonstration probes that live in `tests/`, not in the package.
+The plugin ships the **contract, the runner, the administration page and six environment probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
 *Configuration > Platform health* (`/admin/platform-health`, guarded by the `PLATFORM_HEALTH_VIEW` attribute, see [Access control](#access-control)).
 
-![The platform health page: one card per category, the most severe first](docs/screenshots/platform-health-en.png)
+![The platform health page, light theme: one card per category, the most severe first](docs/screenshots/platform-health-en-light.png)
+
+![The same page in the dark theme](docs/screenshots/platform-health-en-dark.png)
+
+The French page: [light](docs/screenshots/platform-health-fr-light.png), [dark](docs/screenshots/platform-health-fr-dark.png).
 
 - **Summary by category.** Each category takes the worst status of its probes (`critical`, `warning`, `unknown`, `ok`): the category that holds a critical probe comes first. An `unknown` probe reads "Not measurable" with its short reason; it never counts as critical, and never lets a category read "OK".
 - **Detail by probe, folded by default**: status (always spelled out, never carried by colour alone), summary, detail and the **action link** of the probe, built from the route name and parameters of its `HealthActionLink`. A probe that points to a route that does not exist gets no link, not an error.
 - **Deferred render** (Symfony UX Live Component, `loading="defer"`): the page answers at once with a skeleton, the results arrive right after. No probe runs while the skeleton is built.
 - **Shared short cache**: the results are kept for `cache_ttl` seconds (60 by default, `0` disables the cache), so three administrators looking at the page run the probes once. The **Refresh** button runs them again and replaces the cache.
-- **No probe installed**: the page says so and points to this documentation, it is neither empty nor an error.
+- **No check installed**: the page says so and points to this documentation, it is neither empty nor an error.
 - A failing probe never breaks the page and its exception message is never displayed (it goes to the application log).
 
 ```yaml
@@ -167,6 +171,13 @@ composer require tmonier/sylius-platform-health-plugin
 ```
 
 Register `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugin` in `config/bundles.php` and import the routes (see above). Every development command runs in Docker (`make install`, `make phpstan`, `make ecs`, `make rector`, `make unit`, `make non-unit`); the database is the MySQL of `sylius-b2b-demo`, in a database named after the plugin.
+
+## B2B demo
+
+This plugin is part of the work shown in the [Sylius B2B demo](https://github.com/thibmonier/sylius-b2b-demo): a Sylius 2 shop with fictitious sample data where the B2B plugins work together. It is not installed in the online demo yet.
+
+- Online demo: [sylius-b2b.thibaut-monier.fr](https://sylius-b2b.thibaut-monier.fr)
+- Author: [Thibaut Monier](https://www.linkedin.com/in/thibautmonier/)
 
 ## License
 
