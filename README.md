@@ -9,7 +9,7 @@
 
 ## Status
 
-The plugin ships the **contract, the runner, the administration page and six environment probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
+The plugin ships the **contract, the runner, the administration page, a dashboard panel and six environment probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
@@ -44,6 +44,17 @@ tmonier_sylius_platform_health:
 ```
 
 The menu entry and the page hooks are registered by the plugin itself, nothing else to import.
+
+## The dashboard panel
+
+The first page after the login answers "is everything fine?" without a click: a compact **Platform health** panel sits on the administration dashboard, between the statistics and the latest orders.
+
+- **One line per category**, the most severe first, with its worst status **spelled out** ("OK", "Warning", "Critical", "Not measurable") and an icon of its own: the status is never carried by colour alone. The same rules and the same colour tokens as the page, light and dark theme.
+- **The title says it** when something is critical: "1 critical category", "2 critical categories". Otherwise it reads "Platform health". A "See the details" link opens the page.
+- **The dashboard never waits for a probe.** The panel is a deferred Live Component that reads the **same cache as the page** (`cache_ttl`): the dashboard answers with a skeleton, then the panel completes. With a warm cache no probe runs; with a cold cache the first read feeds the cache for the page, after the dashboard has been rendered.
+- **Same right as the page**: the panel is rendered only for an administrator who passes `PLATFORM_HEALTH_VIEW` (see [Access control](#access-control)), and its component URL answers 403 to the others.
+- **A panel that fails disappears quietly**: the exception is logged with its trace, nothing is displayed, the dashboard stays intact.
+- Registered by the plugin through a Twig hook (`sylius_admin.dashboard.index.content`, in `config/twig_hooks/admin.yaml`): no Sylius template is overridden, nothing to configure. To remove it, set `enabled: false` on the `platform_health` entry of that hook in your own `sylius_twig_hooks` configuration.
 
 ## Access control
 

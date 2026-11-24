@@ -9,7 +9,7 @@
 
 ## État
 
-Le plugin livre le **contrat, l'exécuteur, la page d'administration et six sondes d'environnement** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord et six sondes d'environnement** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
@@ -44,6 +44,17 @@ tmonier_sylius_platform_health:
 ```
 
 L'entrée de menu et les hooks de la page sont enregistrés par le plugin lui-même, rien d'autre à importer.
+
+## L'encart du tableau de bord
+
+La première page après la connexion répond à « tout va bien ? » sans un clic : un encart compact **Santé de la plateforme** s'affiche sur le tableau de bord de l'administration, entre les statistiques et les dernières commandes.
+
+- **Une ligne par catégorie**, la plus grave en premier, avec son pire statut **écrit en toutes lettres** (« OK », « Attention », « Critique », « Non mesurable ») et une icône propre : le statut n'est jamais porté par la seule couleur. Mêmes règles et mêmes jetons de couleur que la page, thèmes clair et sombre.
+- **Le titre le dit** quand quelque chose est critique : « 1 catégorie critique », « 2 catégories critiques ». Sinon il affiche « Santé de la plateforme ». Un lien « Voir le détail » ouvre la page.
+- **Le tableau de bord n'attend jamais une sonde.** L'encart est un Live Component différé qui lit le **même cache que la page** (`cache_ttl`) : le tableau de bord répond avec un squelette, puis l'encart se complète. Cache chaud : aucune sonde ne s'exécute ; cache froid : la première lecture alimente le cache de la page, après le rendu du tableau de bord.
+- **Même droit que la page** : l'encart n'est rendu que pour un administrateur qui passe `PLATFORM_HEALTH_VIEW` (voir [Contrôle d'accès](#contrôle-daccès)), et l'URL de son composant répond 403 aux autres.
+- **Un encart qui échoue disparaît sans bruit** : l'exception est journalisée avec sa trace, rien n'est affiché, le tableau de bord reste intact.
+- Déclaré par le plugin via un Twig hook (`sylius_admin.dashboard.index.content`, dans `config/twig_hooks/admin.yaml`) : aucun gabarit de Sylius n'est surchargé, rien à configurer. Pour le retirer, mettez `enabled: false` sur l'entrée `platform_health` de ce hook dans votre propre configuration `sylius_twig_hooks`.
 
 ## Contrôle d'accès
 
