@@ -1,0 +1,34 @@
+{% import '@TmonierSyliusPlatformHealthPlugin/admin/_status.html.twig' as status %}
+
+{% macro placeholder() %}
+    <div class="card tph-card mb-3" role="status" aria-busy="true" data-test-health-skeleton>
+        <div class="card-body tph-muted">
+            <span class="tph-spinner" aria-hidden="true"></span>
+            {{ 'tmonier_platform_health.ui.loading'|trans }}
+        </div>
+    </div>
+{% endmacro %}
+
+{# Always the root element of the component: without panel (probe failure, no probe installed) it stays empty, the dashboard is untouched. #}
+<div {{ attributes }}>
+    {% set panel = this.panel %}
+    {% if panel is not null and panel.categories is not empty %}
+        {% set critical = panel.criticalCount %}
+        <section class="card tph-card mb-3" aria-labelledby="tmonier-platform-health-dashboard-title" data-test-health-dashboard-panel>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title h4 mb-0" id="tmonier-platform-health-dashboard-title" data-test-health-dashboard-title>
+                    {% if critical > 0 %}{{ 'tmonier_platform_health.ui.dashboard.critical'|trans({'%count%': critical}) }}{% else %}{{ 'tmonier_platform_health.ui.title'|trans }}{% endif %}
+                </h2>
+                <a class="tph-link" href="{{ path('tmonier_platform_health_admin_index') }}" data-test-health-dashboard-link>{{ 'tmonier_platform_health.ui.dashboard.link'|trans }}</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for summary in panel.categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-test-health-dashboard-category="{{ summary.category.value }}" data-test-health-status="{{ summary.status.value }}">
+                        <span>{{ ('tmonier_platform_health.category.' ~ summary.category.value)|trans }}</span>
+                        {{ status.category(summary.status.value) }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+</div>

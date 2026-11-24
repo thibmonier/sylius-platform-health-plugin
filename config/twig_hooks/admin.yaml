@@ -21,3 +21,10 @@ sylius_twig_hooks:
                 priority: 100
             actions:
                 enabled: false
+
+        # The panel of the dashboard: between the statistics (priority 100) and the latest statistics (priority 0), without
+        # overriding any template of Sylius. The template renders nothing for an administrator who lacks the right.
+        'sylius_admin.dashboard.index.content':
+            platform_health:
+                template: '@TmonierSyliusPlatformHealthPlugin/admin/dashboard/panel.html.twig'
+                priority: 50

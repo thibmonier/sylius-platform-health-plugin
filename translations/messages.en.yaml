@@ -48,6 +48,9 @@ tmonier_platform_health:
         fix: Fix
         caption: 'Checks of the category %category%'
         updated: 'Results updated. Measured at %time%.'
+        dashboard:
+            critical: '{1} 1 critical category|]1,Inf[ %count% critical categories'
+            link: See the details
         column:
             check: Check
             status: Status
