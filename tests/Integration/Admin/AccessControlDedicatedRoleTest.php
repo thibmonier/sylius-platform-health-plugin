@@ -110,4 +110,36 @@ final class AccessControlDedicatedRoleTest extends AccessControlTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter(sprintf('a[href="%s"]', self::PAGE)));
     }
+
+    public function testTheDashboardShowsThePanelToAnAdministratorWhoCarriesTheDedicatedRole(): void
+    {
+        $this->client->loginUser($this->createAdministrator(['ROLE_ADMINISTRATION_ACCESS', 'ROLE_PLATFORM_HEALTH_VIEW']), 'admin');
+
+        $dashboard = $this->client->request('GET', self::DASHBOARD);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $dashboard->filter(self::PANEL));
+    }
+
+    public function testTheDashboardDoesNotRenderThePanelForAnAdministratorWithoutTheRole(): void
+    {
+        $this->client->loginUser($this->createAdministrator(['ROLE_ADMINISTRATION_ACCESS']), 'admin');
+
+        $dashboard = $this->client->request('GET', self::DASHBOARD);
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $dashboard->filter(self::PANEL));
+        self::assertCount(0, $dashboard->filter('[data-test-health-dashboard-panel]'));
+    }
+
+    public function testAnAdministratorWithoutTheRoleCannotRenderThePanelByItsOwnUrl(): void
+    {
+        $request = $this->panelRequestAs(['ROLE_ADMINISTRATION_ACCESS', 'ROLE_PLATFORM_HEALTH_VIEW']);
+        $this->logInAsAnotherClient(['ROLE_ADMINISTRATION_ACCESS']);
+
+        $this->client->request('POST', $request['url'], ['data' => $request['data']]);
+
+        self::assertResponseStatusCodeSame(403);
+        self::assertStringNotContainsString('data-test-health-dashboard-panel', (string) $this->client->getResponse()->getContent());
+    }
 }

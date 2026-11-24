@@ -21,6 +21,10 @@ abstract class AccessControlTestCase extends WebTestCase
 
     protected const PAGE = '/admin/platform-health';
 
+    protected const DASHBOARD = '/admin/';
+
+    protected const PANEL = '[data-live-name-value="tmonier_platform_health:dashboard"]';
+
     protected KernelBrowser $client;
 
     protected function setUp(): void
@@ -66,6 +70,25 @@ abstract class AccessControlTestCase extends WebTestCase
     protected function componentRequestOf(Crawler $skeleton): array
     {
         $placeholder = $skeleton->filter('[data-live-url-value]');
+        self::assertCount(1, $placeholder);
+        $props = json_decode((string) $placeholder->attr('data-live-props-value'), true, flags: \JSON_THROW_ON_ERROR);
+
+        return ['url' => (string) $placeholder->attr('data-live-url-value'), 'data' => json_encode(['props' => $props], \JSON_THROW_ON_ERROR)];
+    }
+
+    /**
+     * The dashboard panel (US-289), reached the same way: by the URL of its component.
+     *
+     * @param list<string> $roles
+     *
+     * @return array{url: string, data: string}
+     */
+    protected function panelRequestAs(array $roles): array
+    {
+        $this->client->loginUser($this->createAdministrator($roles), 'admin');
+        $dashboard = $this->client->request('GET', self::DASHBOARD);
+        self::assertResponseIsSuccessful();
+        $placeholder = $dashboard->filter(self::PANEL);
         self::assertCount(1, $placeholder);
         $props = json_decode((string) $placeholder->attr('data-live-props-value'), true, flags: \JSON_THROW_ON_ERROR);
 
