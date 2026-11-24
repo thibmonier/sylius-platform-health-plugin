@@ -174,7 +174,7 @@ Enregistrez `Tmonier\SyliusPlatformHealthPlugin\TmonierSyliusPlatformHealthPlugi
 
 ## Démo B2B
 
-Ce plugin fait partie du travail présenté dans la [démo B2B Sylius](https://github.com/thibmonier/sylius-b2b-demo) : une boutique Sylius 2 avec des données d'exemple fictives, où les plugins B2B fonctionnent ensemble. Il n'est pas encore installé dans la démo en ligne.
+Ce plugin fait partie du travail présenté dans la [démo B2B Sylius](https://github.com/thibmonier/sylius-b2b-demo) : une boutique Sylius 2 avec des données d'exemple fictives, où les plugins B2B fonctionnent ensemble. La démo l'installe depuis la v0.2.0 : ses comptes administrateur publics ont le rôle `ROLE_PLATFORM_HEALTH_VIEW`, et la page montre les sondes de l'image réelle de la démo.
 
 - Démo en ligne : [sylius-b2b.thibaut-monier.fr](https://sylius-b2b.thibaut-monier.fr)
 - Auteur : [Thibaut Monier](https://www.linkedin.com/in/thibautmonier/)

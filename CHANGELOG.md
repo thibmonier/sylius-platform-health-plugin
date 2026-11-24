@@ -5,9 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-24
+
 ### Changed
 - Translations (EN, FR) reviewed: the empty-state text no longer claims that the plugin ships no diagnostic of its own, the French empty-state title says "contrôle" like the rest of the page, and the loading text uses the ellipsis character.
-- README (EN, FR) rewritten for the shipped version: environment probes, `access.role` and `ROLE_PLATFORM_HEALTH_VIEW`, accessibility, link to the demo and to the author; real screenshots (French and English, light and dark theme, 1280 px) taken on the test application.
+- README (EN, FR) rewritten for the shipped version: environment probes, `access.role` and `ROLE_PLATFORM_HEALTH_VIEW`, accessibility, link to the demo and to the author; real screenshots (French and English, light and dark theme, 1280 px) taken on the test application. The demo section says that the B2B demo installs the plugin.
 
 ### Fixed
 - The French and English catalogues are now guarded by tests: same keys and placeholders in both languages, no key referenced by the code or the templates missing, no unused key, and a wording rule (check/contrôle vocabulary, no stale text). They run in the unit and non-unit suites.
@@ -48,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Shared short cache of the results (`cache_ttl`, 60 seconds by default, 0 disables it) and a "Refresh" action that ignores the cache and replaces it.
 - English and French translations of the page, README section and screenshots (the demonstration probes live in the test application).
 
-[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/thibmonier/sylius-platform-health-plugin/releases/tag/v0.1.0
