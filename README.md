@@ -49,6 +49,12 @@ The menu entry and the page hooks are registered by the plugin itself, nothing e
 
 The first page after the login answers "is everything fine?" without a click: a compact **Platform health** panel sits on the administration dashboard, between the statistics and the latest orders.
 
+![The Platform health panel on the dashboard, light theme: one line per category with its status spelled out, and a "See the details" link](docs/screenshots/platform-health-dashboard-en-light.png)
+
+![The same panel in the dark theme](docs/screenshots/platform-health-dashboard-en-dark.png)
+
+Taken on the B2B demo, with its real probes: Symfony 8.1 nears its end of support, hence the warning. The French panel: [light](docs/screenshots/platform-health-dashboard-fr-light.png), [dark](docs/screenshots/platform-health-dashboard-fr-dark.png).
+
 - **One line per category**, the most severe first, with its worst status **spelled out** ("OK", "Warning", "Critical", "Not measurable") and an icon of its own: the status is never carried by colour alone. The same rules and the same colour tokens as the page, light and dark theme.
 - **The title says it** when something is critical: "1 critical category", "2 critical categories". Otherwise it reads "Platform health". A "See the details" link opens the page.
 - **The dashboard never waits for a probe.** The panel is a deferred Live Component that reads the **same cache as the page** (`cache_ttl`): the dashboard answers with a skeleton, then the panel completes. With a warm cache no probe runs; with a cold cache the first read feeds the cache for the page, after the dashboard has been rendered.
