@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoEnvironmentCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoShopCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\FailingCheck;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\FailingClock;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\UnmeasurableCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\SupportAssessor;
+use Tmonier\SyliusPlatformHealthPlugin\Health\HealthSnapshotProvider;
 
 /*
  * Test application only: five probes declared like an integrator would, as plain services. Nothing tags them by hand,
@@ -31,6 +34,18 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_sylius_platform_health.test.fixed_clock'),
             service('tmonier_sylius_platform_health.environment.end_of_support_table'),
             180,
+        ])
+    ;
+
+    // The snapshot provider is final: a test makes it throw through its clock (FailingClock), which is read after the probes ran.
+    $services->set('tmonier_sylius_platform_health.test.failing_clock', FailingClock::class);
+    $services->set('tmonier_sylius_platform_health.snapshot_provider', HealthSnapshotProvider::class)
+        ->args([
+            service('tmonier_sylius_platform_health.runner'),
+            service('cache.app'),
+            service('tmonier_sylius_platform_health.test.failing_clock'),
+            service('logger'),
+            param('tmonier_sylius_platform_health.cache_ttl'),
         ])
     ;
 

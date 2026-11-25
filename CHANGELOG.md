@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Platform health panel on the administration dashboard (US-289): one line per category with its worst status spelled out and an icon of its own, a title that counts the critical categories ("1 critical category"), and a "See the details" link to the page. Deferred Live Component (`tmonier_platform_health:dashboard`) that reads the cache shared with the page: the dashboard never runs a probe while it is rendered. Declared through the `sylius_admin.dashboard.index.content` Twig hook in `config/twig_hooks/admin.yaml`, no Sylius template overridden.
+- The panel is rendered only for an administrator who passes `PLATFORM_HEALTH_VIEW`; its component URL answers 403 to the others. A panel that fails shows nothing: the exception is logged with its trace and the dashboard stays intact.
+- English and French translations of the panel (`tmonier_platform_health.ui.dashboard.*`).
+
 ## [0.2.1] - 2026-11-24
 
 ### Changed

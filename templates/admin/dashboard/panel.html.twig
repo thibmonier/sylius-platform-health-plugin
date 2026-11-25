@@ -1,0 +1,14 @@
+{# Hook of the administration dashboard (US-289). The skeleton is answered with the dashboard, the browser then asks for the results,
+   so no probe ever runs while the dashboard is rendered. The panel is for the administrators who hold the right (the component
+   refuses the others on its own URL). #}
+{% if is_granted('PLATFORM_HEALTH_VIEW') %}
+    {% include '@TmonierSyliusPlatformHealthPlugin/admin/_tokens.html.twig' %}
+
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-12">
+                {{ component('tmonier_platform_health:dashboard', { loading: 'defer' }) }}
+            </div>
+        </div>
+    </div>
+{% endif %}

@@ -28,4 +28,13 @@ final class AccessControlDefaultTest extends AccessControlTestCase
 
         self::assertCount(1, $crawler->filter(sprintf('a[href="%s"]', self::PAGE)));
     }
+
+    public function testTheDashboardShowsThePanelToThatAdministrator(): void
+    {
+        $this->client->loginUser($this->createAdministrator(['ROLE_ADMINISTRATION_ACCESS']), 'admin');
+
+        $dashboard = $this->client->request('GET', self::DASHBOARD);
+
+        self::assertCount(1, $dashboard->filter(self::PANEL));
+    }
 }

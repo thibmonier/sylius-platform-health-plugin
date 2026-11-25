@@ -22,6 +22,7 @@ use Tmonier\SyliusPlatformHealthPlugin\Security\SensitiveValueMasker;
 use Tmonier\SyliusPlatformHealthPlugin\Summary\HealthSummaryBuilder;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\ActionUrlExtension;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\Component\HealthComponent;
+use Tmonier\SyliusPlatformHealthPlugin\Twig\Component\HealthDashboardComponent;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\SafeTextExtension;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
@@ -61,6 +62,18 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
         ->tag('sylius.live_component.admin', [
             'key' => 'tmonier_platform_health:summary',
             'template' => '@TmonierSyliusPlatformHealthPlugin/admin/summary.html.twig',
+        ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.twig.component.dashboard', HealthDashboardComponent::class)
+        ->args([
+            service('tmonier_sylius_platform_health.snapshot_provider'),
+            service('tmonier_sylius_platform_health.summary_builder'),
+            service('logger'),
+        ])
+        ->tag('sylius.live_component.admin', [
+            'key' => 'tmonier_platform_health:dashboard',
+            'template' => '@TmonierSyliusPlatformHealthPlugin/admin/dashboard.html.twig',
         ])
     ;
 

@@ -48,6 +48,9 @@ tmonier_platform_health:
         fix: Corriger
         caption: 'Contrôles de la catégorie %category%'
         updated: 'Résultats mis à jour. Mesuré à %time%.'
+        dashboard:
+            critical: '{1} 1 catégorie critique|]1,Inf[ %count% catégories critiques'
+            link: Voir le détail
         column:
             check: Contrôle
             status: Statut
