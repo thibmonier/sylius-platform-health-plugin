@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
 ### Added
 - Platform health panel on the administration dashboard (US-289): one line per category with its worst status spelled out and an icon of its own, a title that counts the critical categories ("1 critical category"), and a "See the details" link to the page. Deferred Live Component (`tmonier_platform_health:dashboard`) that reads the cache shared with the page: the dashboard never runs a probe while it is rendered. Declared through the `sylius_admin.dashboard.index.content` Twig hook in `config/twig_hooks/admin.yaml`, no Sylius template overridden.
 - The panel is rendered only for an administrator who passes `PLATFORM_HEALTH_VIEW`; its component URL answers 403 to the others. A panel that fails shows nothing: the exception is logged with its trace and the dashboard stays intact.
@@ -55,7 +57,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Shared short cache of the results (`cache_ttl`, 60 seconds by default, 0 disables it) and a "Refresh" action that ignores the cache and replaces it.
 - English and French translations of the page, README section and screenshots (the demonstration probes live in the test application).
 
-[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/thibmonier/sylius-platform-health-plugin/releases/tag/v0.1.0
