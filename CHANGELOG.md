@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Screenshots of the dashboard panel in the README, English and French, light and dark theme, taken on the B2B demo (US-289).
+
 ## [0.3.0] - 2026-11-25
 
 ### Added

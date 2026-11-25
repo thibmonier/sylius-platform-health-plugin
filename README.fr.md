@@ -49,6 +49,12 @@ L'entrée de menu et les hooks de la page sont enregistrés par le plugin lui-m�
 
 La première page après la connexion répond à « tout va bien ? » sans un clic : un encart compact **Santé de la plateforme** s'affiche sur le tableau de bord de l'administration, entre les statistiques et les dernières commandes.
 
+![L'encart Santé de la plateforme sur le tableau de bord, thème clair : une ligne par catégorie avec son statut écrit en toutes lettres, et un lien « Voir le détail »](docs/screenshots/platform-health-dashboard-fr-light.png)
+
+![Le même encart en thème sombre](docs/screenshots/platform-health-dashboard-fr-dark.png)
+
+Prises sur la démo B2B, avec ses vraies sondes : Symfony 8.1 approche de sa fin de support, d'où l'avertissement. L'encart en anglais : [clair](docs/screenshots/platform-health-dashboard-en-light.png), [sombre](docs/screenshots/platform-health-dashboard-en-dark.png).
+
 - **Une ligne par catégorie**, la plus grave en premier, avec son pire statut **écrit en toutes lettres** (« OK », « Attention », « Critique », « Non mesurable ») et une icône propre : le statut n'est jamais porté par la seule couleur. Mêmes règles et mêmes jetons de couleur que la page, thèmes clair et sombre.
 - **Le titre le dit** quand quelque chose est critique : « 1 catégorie critique », « 2 catégories critiques ». Sinon il affiche « Santé de la plateforme ». Un lien « Voir le détail » ouvre la page.
 - **Le tableau de bord n'attend jamais une sonde.** L'encart est un Live Component différé qui lit le **même cache que la page** (`cache_ttl`) : le tableau de bord répond avec un squelette, puis l'encart se complète. Cache chaud : aucune sonde ne s'exécute ; cache froid : la première lecture alimente le cache de la page, après le rendu du tableau de bord.
