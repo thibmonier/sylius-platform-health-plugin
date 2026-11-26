@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Tmonier\SyliusPlatformHealthPlugin\Integration;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\PluginChecks;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckReport;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckRunner;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthStatus;
@@ -25,7 +26,7 @@ final class PluginBootTest extends KernelTestCase
         $runner = self::getContainer()->get('tmonier_sylius_platform_health.test.runner');
         self::assertInstanceOf(HealthCheckRunner::class, $runner);
 
-        $reports = array_filter($runner->run(), static fn (HealthCheckReport $report): bool => !str_starts_with($report->identifier, 'environment.') || 'environment.demo' === $report->identifier);
+        $reports = array_filter($runner->run(), static fn (HealthCheckReport $report): bool => !PluginChecks::ships($report->identifier));
 
         self::assertSame(
             [

@@ -3,6 +3,14 @@
 declare(strict_types=1);
 
 use Symfony\Component\HttpKernel\Kernel;
+use Tmonier\SyliusPlatformHealthPlugin\Data\ConnectionCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\DbalConnectionPinger;
+use Tmonier\SyliusPlatformHealthPlugin\Data\DbalTableRowEstimator;
+use Tmonier\SyliusPlatformHealthPlugin\Data\DoctrineMigrationStatusReader;
+use Tmonier\SyliusPlatformHealthPlugin\Data\OrmSchemaDriftReader;
+use Tmonier\SyliusPlatformHealthPlugin\Data\PendingMigrationsCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\SchemaDriftCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\TableGrowthCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\AppDebugCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\EndOfSupportTable;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\NativeOpcacheStateReader;
@@ -160,6 +168,51 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
 
     $services->set('tmonier_sylius_platform_health.environment.app_debug', AppDebugCheck::class)
         ->args([param('kernel.debug'), param('kernel.environment')])
+        ->autoconfigure()
+    ;
+
+    // Data probes (US-294): the default Doctrine connection only; read-only, nothing to declare in the application.
+    $services->set('tmonier_sylius_platform_health.data.connection_pinger', DbalConnectionPinger::class)
+        ->args([service('doctrine.dbal.default_connection')])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.connection', ConnectionCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.data.connection_pinger'),
+            service('clock'),
+            service('logger'),
+            param('tmonier_sylius_platform_health.data.connection_warning_ms'),
+        ])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.migration_status_reader', DoctrineMigrationStatusReader::class)
+        ->args([service('doctrine.migrations.dependency_factory')->nullOnInvalid()])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.pending_migrations', PendingMigrationsCheck::class)
+        ->args([service('tmonier_sylius_platform_health.data.migration_status_reader')])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.schema_drift_reader', OrmSchemaDriftReader::class)
+        ->args([service('doctrine.orm.default_entity_manager')->nullOnInvalid()])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.schema_drift', SchemaDriftCheck::class)
+        ->args([service('tmonier_sylius_platform_health.data.schema_drift_reader')])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.table_row_estimator', DbalTableRowEstimator::class)
+        ->args([service('doctrine.dbal.default_connection')])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.table_growth', TableGrowthCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.data.table_row_estimator'),
+            param('tmonier_sylius_platform_health.data.table_growth'),
+        ])
         ->autoconfigure()
     ;
 };

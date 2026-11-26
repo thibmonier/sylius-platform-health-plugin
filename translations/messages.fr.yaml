@@ -27,6 +27,27 @@ tmonier_platform_health:
             ok: 'Environnement de production, mode debug désactivé.'
             debug_in_prod: 'Le mode debug est actif en production.'
             not_prod: 'L''application tourne dans l''environnement « %environment% », pas en production.'
+    data:
+        connection:
+            ok: 'La base de données répond (%duration_ms% ms).'
+            slow: 'La base de données répond lentement : %duration_ms% ms (seuil : %threshold_ms% ms).'
+            unreachable: 'La base de données ne répond pas : voir le journal de l''application.'
+        pending_migrations:
+            ok: 'Toutes les migrations Doctrine sont exécutées.'
+            pending: '{1} Une migration Doctrine est en attente.|]1,Inf] %count% migrations Doctrine sont en attente.'
+            unknown_executed: '{1} Une migration exécutée est inconnue du code.|]1,Inf] %count% migrations exécutées sont inconnues du code.'
+            not_configured: 'Les migrations Doctrine ne sont pas configurées : l''état du schéma n''est pas mesurable.'
+        schema_drift:
+            ok: 'Le schéma de la base est conforme au mapping Doctrine.'
+            drift: '{1} Le schéma de la base s''écarte du mapping : une instruction à appliquer.|]1,Inf] Le schéma de la base s''écarte du mapping : %count% instructions à appliquer.'
+            not_available: 'Pas d''ORM Doctrine : l''écart du schéma n''est pas mesurable.'
+        table_growth:
+            none: 'Aucune table surveillée.'
+            ok: '{1} La table surveillée est sous son seuil.|]1,Inf] Les %count% tables surveillées sont sous leur seuil.'
+            over: 'La table %table% compte environ %rows% lignes (seuil : %threshold%).'
+            others: '{1} Une autre table dépasse son seuil.|]1,Inf] %count% autres tables dépassent leur seuil.'
+            missing: 'La table surveillée %table% est introuvable.'
+            unsupported_platform: 'Cette base de données ne fournit pas d''estimation du nombre de lignes.'
     category:
         environment: Environnement
         data: Données

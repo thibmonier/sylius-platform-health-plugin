@@ -9,7 +9,7 @@
 
 ## Status
 
-The plugin ships the **contract, the runner, the administration page, a dashboard panel and six environment probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
+The plugin ships the **contract, the runner, the administration page, a dashboard panel, six environment probes and four data probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode; database connection, pending migrations, schema drift, table growth), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
@@ -126,6 +126,29 @@ tmonier_sylius_platform_health:
 ```
 
 **The end-of-support table** (`EndOfSupportTable`) is frozen in the code, so the administration never calls the network. Its version (`2026-12`) is displayed by the PHP and Sylius probes ("Table of 2026-12"). It is **renewed with every release of the plugin**; twelve months after its version, those two probes turn to `warning` ("dates table to renew") instead of a false `ok`. A PHP or Sylius branch absent from the table is `unknown` ("branch absent from the table"), never `ok`. The probes read the date through the Symfony `clock` service: tests inject a fixed clock.
+
+## Data probes
+
+Four probes of the `data` category, registered by the plugin (nothing to declare), **read-only**: none executes a migration, alters the schema or counts the rows of a table. Only the default Doctrine connection is probed. Each non-`ok` result links to this documentation (`Fix`).
+
+| Identifier | Measures | Statuses |
+|---|---|---|
+| `data.connection` | the default connection answers a trivial query (`SELECT 1`), and how fast | `ok` with the duration; `warning` beyond 500 ms; `critical` when the database does not answer (the cause goes to the log, **never the DSN, the host or the user** to the screen) |
+| `data.pending_migrations` | Doctrine migrations of the code not executed, as `doctrine:migrations:status` reports them | `ok`; `critical` from one pending migration (run `bin/console doctrine:migrations:migrate`); `warning` for an executed migration the code no longer knows; `unknown` without Doctrine migrations |
+| `data.schema_drift` | statements that would align the database with the Doctrine mapping (`doctrine:schema:update --dump-sql`) | `ok`; `warning` with the **number** of statements, never their SQL (run `bin/console doctrine:schema:validate` to see them); `unknown` without a Doctrine ORM |
+| `data.table_growth` | estimated rows of the **declared** tables, read from the catalogue of the database (MySQL and MariaDB: `information_schema.TABLES`, PostgreSQL: `pg_class`), **never a `COUNT(*)`** | `ok` under the threshold; `warning` beyond it; `critical` beyond the double; `unknown` for a missing table or another database |
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    data:
+        connection_warning_ms: 500      # data.connection warns beyond this answer time
+        table_growth:                   # no table is watched by default
+            tmonier_audit_log: 100000   # estimated rows from which the table warns (critical beyond 200000)
+            sylius_order: 2000000
+```
+
+Declare the tables that a scheduled purge keeps small (logs, journals, sent messages): when the purge stops, the estimate grows past its threshold. The estimate is the one the database keeps for its query planner; it lags behind the real count (PostgreSQL reads `0` for a table never analysed), which is enough for an order of magnitude. Computing the schema drift loads the whole mapping: it fits in the time budget of the runner with the production metadata cache; if it does not, the probe reads `unknown` ("time budget exceeded"), like any slow probe.
 
 ## The contract
 

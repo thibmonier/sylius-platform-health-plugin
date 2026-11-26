@@ -42,14 +42,50 @@ final class ConfigurationTest extends TestCase
         yield 'prefix only' => ['ROLE_'];
     }
 
+    public function testTheDataProbesHaveOpinionatedDefaultsAndWatchNoTable(): void
+    {
+        $data = $this->process([])['data'];
+
+        self::assertSame(500, $data['connection_warning_ms']);
+        self::assertSame([], $data['table_growth']);
+    }
+
+    public function testWatchedTablesKeepTheirNameAndThreshold(): void
+    {
+        $data = $this->process(['data' => ['table_growth' => ['tmonier_audit_log' => 100000, 'sylius_order' => 500000]]])['data'];
+
+        self::assertSame(['tmonier_audit_log' => 100000, 'sylius_order' => 500000], $data['table_growth']);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    #[DataProvider('invalidData')]
+    public function testInvalidDataSettingsAreRefused(array $data): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['data' => $data]);
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function invalidData(): iterable
+    {
+        yield 'zero threshold' => [['table_growth' => ['tmonier_audit_log' => 0]]];
+        yield 'table name with a quote' => [['table_growth' => ["audit'; --" => 1000]]];
+        yield 'zero connection threshold' => [['connection_warning_ms' => 0]];
+    }
+
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{access: array{role: string}}
+     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, table_growth: array<string, int>}}
      */
     private function process(array $config): array
     {
-        /** @var array{access: array{role: string}} $processed */
+        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, table_growth: array<string, int>}} $processed */
         $processed = (new Processor())->processConfiguration(new Configuration(), [$config]);
 
         return $processed;

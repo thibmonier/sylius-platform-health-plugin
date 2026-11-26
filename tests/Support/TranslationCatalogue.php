@@ -15,7 +15,7 @@ final class TranslationCatalogue
 {
     public const ROOT = 'tmonier_platform_health';
 
-    private const REFERENCE = '/' . self::ROOT . '\.(?:result|environment|status|category|ui)(?:\.[a-z_]+)*\.?/';
+    private const REFERENCE = '/' . self::ROOT . '\.(?:result|environment|data|status|category|ui)(?:\.[a-z_]+)*\.?/';
 
     private const SUPPORT_PREFIX = self::ROOT . '.environment.support.';
 

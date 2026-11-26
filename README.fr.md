@@ -9,7 +9,7 @@
 
 ## État
 
-Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord et six sondes d'environnement** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, six sondes d'environnement et quatre sondes de données** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
@@ -126,6 +126,29 @@ tmonier_sylius_platform_health:
 ```
 
 **La table des fins de support** (`EndOfSupportTable`) est figée dans le code : l'administration n'appelle jamais le réseau. Sa version (`2026-12`) est affichée par les sondes PHP et Sylius (« Table du 2026-12 »). Elle est **renouvelée à chaque version du plugin** ; douze mois après sa version, ces deux sondes passent en `warning` (« table de dates à renouveler ») au lieu d'un faux `ok`. Une branche de PHP ou de Sylius absente de la table est `unknown` (« branche absente de la table »), jamais `ok`. Les sondes lisent la date par le service `clock` de Symfony : les tests injectent une horloge fixe.
+
+## Sondes de données
+
+Quatre sondes de la catégorie `data`, enregistrées par le plugin (rien à déclarer), **en lecture seule** : aucune n'exécute de migration, ne modifie le schéma ni ne compte les lignes d'une table. Seule la connexion Doctrine par défaut est sondée. Chaque résultat autre que `ok` renvoie à cette documentation (`Corriger`).
+
+| Identifiant | Mesure | Statuts |
+|---|---|---|
+| `data.connection` | la connexion par défaut répond à une requête triviale (`SELECT 1`), et en combien de temps | `ok` avec la durée ; `warning` au-delà de 500 ms ; `critical` si la base ne répond pas (la cause va au journal, **jamais le DSN, l'hôte ni l'utilisateur** à l'écran) |
+| `data.pending_migrations` | migrations Doctrine du code non exécutées, comme les rapporte `doctrine:migrations:status` | `ok` ; `critical` dès une migration en attente (lancer `bin/console doctrine:migrations:migrate`) ; `warning` pour une migration exécutée que le code ne connaît plus ; `unknown` sans migrations Doctrine |
+| `data.schema_drift` | instructions qui aligneraient la base sur le mapping Doctrine (`doctrine:schema:update --dump-sql`) | `ok` ; `warning` avec le **nombre** d'instructions, jamais leur SQL (lancer `bin/console doctrine:schema:validate` pour les voir) ; `unknown` sans ORM Doctrine |
+| `data.table_growth` | nombre de lignes **estimé** des tables **déclarées**, lu dans le catalogue de la base (MySQL et MariaDB : `information_schema.TABLES`, PostgreSQL : `pg_class`), **jamais de `COUNT(*)`** | `ok` sous le seuil ; `warning` au-delà ; `critical` au-delà du double ; `unknown` pour une table introuvable ou une autre base |
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    data:
+        connection_warning_ms: 500      # data.connection alerte au-delà de ce temps de réponse
+        table_growth:                   # aucune table surveillée par défaut
+            tmonier_audit_log: 100000   # lignes estimées à partir desquelles la table alerte (critique au-delà de 200000)
+            sylius_order: 2000000
+```
+
+Déclarez les tables qu'une purge planifiée garde petites (journaux, historiques, messages envoyés) : quand la purge s'arrête, l'estimation dépasse son seuil. L'estimation est celle que la base tient pour son planificateur de requêtes ; elle suit le nombre réel avec du retard (PostgreSQL lit `0` pour une table jamais analysée), ce qui suffit pour un ordre de grandeur. Le calcul de la dérive du schéma charge tout le mapping : il tient dans le budget de temps de l'exécuteur avec le cache de métadonnées de production ; sinon, la sonde lit `unknown` (« budget de temps dépassé »), comme toute sonde lente.
 
 ## Le contrat
 

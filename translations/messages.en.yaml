@@ -27,6 +27,27 @@ tmonier_platform_health:
             ok: 'Production environment, debug mode disabled.'
             debug_in_prod: 'Debug mode is active in production.'
             not_prod: 'The application runs in the "%environment%" environment, not in production.'
+    data:
+        connection:
+            ok: 'The database answers (%duration_ms% ms).'
+            slow: 'The database answers slowly: %duration_ms% ms (threshold: %threshold_ms% ms).'
+            unreachable: 'The database does not answer: see the application log.'
+        pending_migrations:
+            ok: 'Every Doctrine migration is executed.'
+            pending: '{1} One Doctrine migration is pending.|]1,Inf] %count% Doctrine migrations are pending.'
+            unknown_executed: '{1} One executed migration is unknown to the code.|]1,Inf] %count% executed migrations are unknown to the code.'
+            not_configured: 'Doctrine migrations are not configured: the state of the schema cannot be measured.'
+        schema_drift:
+            ok: 'The database schema matches the Doctrine mapping.'
+            drift: '{1} The database schema differs from the mapping: one statement to apply.|]1,Inf] The database schema differs from the mapping: %count% statements to apply.'
+            not_available: 'No Doctrine ORM: the schema drift cannot be measured.'
+        table_growth:
+            none: 'No table is watched.'
+            ok: '{1} The watched table is under its threshold.|]1,Inf] The %count% watched tables are under their threshold.'
+            over: 'Table %table% holds about %rows% rows (threshold: %threshold%).'
+            others: '{1} One other table is beyond its threshold.|]1,Inf] %count% other tables are beyond their threshold.'
+            missing: 'The watched table %table% cannot be found.'
+            unsupported_platform: 'This database gives no estimate of the number of rows.'
     category:
         environment: Environment
         data: Data
