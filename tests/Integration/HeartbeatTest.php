@@ -42,7 +42,7 @@ final class HeartbeatTest extends KernelTestCase
 
     public function testASuccessfulRunOfADeclaredCommandIsItsLastSuccess(): void
     {
-        self::assertSame(0, $this->runCommand(BeatCommand::NAME));
+        self::assertSame(0, $this->runConsole(BeatCommand::NAME));
 
         $heartbeat = $this->store()->all()[BeatCommand::NAME] ?? null;
         self::assertInstanceOf(Heartbeat::class, $heartbeat);
@@ -53,11 +53,11 @@ final class HeartbeatTest extends KernelTestCase
 
     public function testAFailedRunKeepsTheLastSuccessAndOneRowPerCommand(): void
     {
-        $this->runCommand(BeatCommand::NAME);
+        $this->runConsole(BeatCommand::NAME);
         $success = ($this->store()->all()[BeatCommand::NAME] ?? null)?->lastSuccessAt();
         self::assertNotNull($success);
 
-        self::assertSame(1, $this->runCommand(BeatCommand::NAME, ['--fail' => true]));
+        self::assertSame(1, $this->runConsole(BeatCommand::NAME, ['--fail' => true]));
 
         $heartbeat = $this->store()->all()[BeatCommand::NAME] ?? null;
         self::assertInstanceOf(Heartbeat::class, $heartbeat);
@@ -68,14 +68,14 @@ final class HeartbeatTest extends KernelTestCase
 
     public function testAnUndeclaredCommandIsNeverRecorded(): void
     {
-        self::assertSame(0, $this->runCommand('list'));
+        self::assertSame(0, $this->runConsole('list'));
 
         self::assertSame([], $this->store()->all());
     }
 
     public function testTheProbeReadsTheDeclaredCommandOnTimeAfterItsRun(): void
     {
-        $this->runCommand(BeatCommand::NAME);
+        $this->runConsole(BeatCommand::NAME);
 
         $runner = self::getContainer()->get('tmonier_sylius_platform_health.test.runner');
         self::assertInstanceOf(HealthCheckRunner::class, $runner);
@@ -121,7 +121,7 @@ final class HeartbeatTest extends KernelTestCase
     /**
      * @param array<string, mixed> $options
      */
-    private function runCommand(string $name, array $options = []): int
+    private function runConsole(string $name, array $options = []): int
     {
         $kernel = self::$kernel;
         self::assertNotNull($kernel);
