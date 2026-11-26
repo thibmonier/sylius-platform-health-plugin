@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-26
+
+### Changed
+- End-of-support table reviewed for this release (version `2026-12` kept): PHP 8.6 added (security support until 2030-12-31); the end of support of Sylius 2.3 (December 2027) is now the published date, no longer an estimate.
+
 ### Added
 - Screenshots of the dashboard panel in the README, English and French, light and dark theme, taken on the B2B demo (US-289).
 - Four data probes (US-294), registered by the plugin: `data.connection` (the default Doctrine connection answers, `warning` beyond `data.connection_warning_ms`, 500 ms by default; `critical` when it does not, the cause logged and never displayed), `data.pending_migrations` (`critical` from one pending Doctrine migration), `data.schema_drift` (number of statements between the mapping and the database, never their SQL) and `data.table_growth` (estimated rows of the tables declared under `data.table_growth`, read from the MySQL, MariaDB or PostgreSQL catalogue, never a `COUNT(*)`; `critical` beyond the double of the threshold). Read-only. English and French translations (`tmonier_platform_health.data.*`).
@@ -65,7 +70,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Shared short cache of the results (`cache_ttl`, 60 seconds by default, 0 disables it) and a "Refresh" action that ignores the cache and replaces it.
 - English and French translations of the page, README section and screenshots (the demonstration probes live in the test application).
 
-[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/thibmonier/sylius-platform-health-plugin/compare/v0.1.0...v0.2.0

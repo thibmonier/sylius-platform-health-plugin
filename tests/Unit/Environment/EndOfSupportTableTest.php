@@ -14,6 +14,14 @@ final class EndOfSupportTableTest extends TestCase
         self::assertSame('2026-12', (new EndOfSupportTable())->version());
     }
 
+    public function testTheDatesReviewedForVersionZeroFourAreThePublishedOnes(): void
+    {
+        $table = new EndOfSupportTable();
+
+        self::assertSame('2030-12-31', $table->phpSecurityEnd('8.6')?->format('Y-m-d'));
+        self::assertSame('2027-12-31', $table->syliusSupportEnd('2.3')?->format('Y-m-d'));
+    }
+
     public function testEveryBranchTestedInTheCiIsInTheTable(): void
     {
         $table = new EndOfSupportTable();
