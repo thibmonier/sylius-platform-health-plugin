@@ -1,0 +1,19 @@
+{
+    "name": "tmonier/demo-webhooks-plugin",
+    "type": "sylius-plugin",
+    "description": "Demonstration plugin of the health plugin test application: it provides a probe without requiring the health plugin",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "sylius/sylius": "^2.2.9 || ^2.3",
+        "symfony/config": "^6.4 || ^7.4 || ^8.0",
+        "symfony/dependency-injection": "^6.4 || ^7.4 || ^8.0",
+        "symfony/http-kernel": "^6.4 || ^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "tmonier/sylius-platform-health-plugin": "^0.4"
+    },
+    "suggest": {
+        "tmonier/sylius-platform-health-plugin": "Shows the health probe of this plugin on the administration page and dashboard (loaded only when installed)"
+    }
+}
