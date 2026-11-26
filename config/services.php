@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Symfony\Component\HttpKernel\Kernel;
+use Tmonier\SyliusPlatformHealthPlugin\Console\HealthCheckCommand;
 use Tmonier\SyliusPlatformHealthPlugin\Data\ConnectionCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Data\DbalConnectionPinger;
 use Tmonier\SyliusPlatformHealthPlugin\Data\DbalTableRowEstimator;
@@ -70,6 +71,16 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
             service('logger'),
             param('tmonier_sylius_platform_health.cache_ttl'),
         ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.console.check', HealthCheckCommand::class)
+        ->args([
+            service('tmonier_sylius_platform_health.runner'),
+            service('translator'),
+            service('tmonier_sylius_platform_health.security.safe_text'),
+            service('clock'),
+        ])
+        ->tag('console.command')
     ;
 
     $services->set('tmonier_sylius_platform_health.summary_builder', HealthSummaryBuilder::class);
