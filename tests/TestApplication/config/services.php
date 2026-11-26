@@ -61,4 +61,7 @@ return static function (ContainerConfigurator $container): void {
         $services->alias('tmonier_sylius_platform_health.test.data.' . $reader, 'tmonier_sylius_platform_health.data.' . $reader)->public();
     }
     $services->alias('tmonier_sylius_platform_health.test.migrations_dependency_factory', 'doctrine.migrations.dependency_factory')->public();
+    // US-295: the queues as the probes read them, and a Doctrine transport of Sylius to put a message in.
+    $services->alias('tmonier_sylius_platform_health.test.data.messenger_queues', 'tmonier_sylius_platform_health.data.messenger_queues')->public();
+    $services->alias('tmonier_sylius_platform_health.test.transport.main', 'messenger.transport.main')->public();
 };

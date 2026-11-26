@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
@@ -46,10 +47,10 @@ final class HealthCheckContainerTest extends TestCase
         );
     }
 
-    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheTenChecksOfThePlugin(): void
+    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheFifteenChecksOfThePlugin(): void
     {
         self::assertSame([], $this->applicationReports($this->container()));
-        self::assertCount(10, $this->runner($this->container())->run());
+        self::assertCount(15, $this->runner($this->container())->run());
     }
 
     public function testTwoChecksWithTheSameIdentifierFailTheCompilationNamingTheIdentifierAndBothClasses(): void
@@ -92,6 +93,11 @@ final class HealthCheckContainerTest extends TestCase
         $container->register('logger', NullLogger::class);
         // The environment probes of the plugin read the date through the clock service and two kernel parameters.
         $container->register('clock', NativeClock::class);
+        // The cache and directory probes read the application cache and three kernel paths.
+        $container->register('cache.app', ArrayAdapter::class);
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.cache_dir', sys_get_temp_dir());
+        $container->setParameter('kernel.logs_dir', sys_get_temp_dir());
         $container->setParameter('kernel.debug', false);
         $container->setParameter('kernel.environment', 'test');
         // The data probes read the default Doctrine connection: an in-memory SQLite one, opened only if a probe queries it.
@@ -120,7 +126,7 @@ final class HealthCheckContainerTest extends TestCase
     }
 
     /**
-     * @return list<HealthCheckReport> the reports of the checks of the application, without the ten of the plugin
+     * @return list<HealthCheckReport> the reports of the checks of the application, without the fifteen of the plugin
      */
     private function applicationReports(ContainerBuilder $container): array
     {

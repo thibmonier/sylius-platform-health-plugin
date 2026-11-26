@@ -50,6 +50,22 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $data['table_growth']);
     }
 
+    public function testTheQueueProbesHaveOpinionatedDefaults(): void
+    {
+        self::assertSame(
+            ['pending_warning' => 100, 'oldest_warning_minutes' => 15, 'oldest_critical_minutes' => 60, 'failed_critical' => 100],
+            $this->process([])['data']['messenger'],
+        );
+    }
+
+    public function testTheCriticalAgeMustBeAboveTheWarningAge(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/oldest_critical_minutes/');
+
+        $this->process(['data' => ['messenger' => ['oldest_warning_minutes' => 30, 'oldest_critical_minutes' => 30]]]);
+    }
+
     public function testWatchedTablesKeepTheirNameAndThreshold(): void
     {
         $data = $this->process(['data' => ['table_growth' => ['tmonier_audit_log' => 100000, 'sylius_order' => 500000]]])['data'];
@@ -81,11 +97,11 @@ final class ConfigurationTest extends TestCase
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, table_growth: array<string, int>}}
+     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}}
      */
     private function process(array $config): array
     {
-        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, table_growth: array<string, int>}} $processed */
+        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}} $processed */
         $processed = (new Processor())->processConfiguration(new Configuration(), [$config]);
 
         return $processed;

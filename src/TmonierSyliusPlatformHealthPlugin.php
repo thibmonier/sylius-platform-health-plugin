@@ -7,6 +7,7 @@ namespace Tmonier\SyliusPlatformHealthPlugin;
 use Sylius\Bundle\CoreBundle\Application\SyliusPluginTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\Compiler\MessengerTransportsPass;
 use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\Compiler\UniqueIdentifierPass;
 
 final class TmonierSyliusPlatformHealthPlugin extends Bundle
@@ -18,6 +19,7 @@ final class TmonierSyliusPlatformHealthPlugin extends Bundle
         parent::build($container);
 
         $container->addCompilerPass(new UniqueIdentifierPass());
+        $container->addCompilerPass(new MessengerTransportsPass());
     }
 
     public function getPath(): string
