@@ -69,6 +69,17 @@ tmonier_platform_health:
             others: '{1} One other table is beyond its threshold.|]1,Inf] %count% other tables are beyond their threshold.'
             missing: 'The watched table %table% cannot be found.'
             unsupported_platform: 'This database gives no estimate of the number of rows.'
+    scheduled_tasks:
+        heartbeat:
+            none: 'No scheduled task declared.'
+            ok: '{1} The declared scheduled task succeeded at its rhythm.|]1,Inf] The %count% declared scheduled tasks succeeded at their rhythm.'
+            line_ok: '%command%: last success on %last_success%'
+            late: '%command% has not succeeded since %last_success%.'
+            never_succeeded: '%command% runs but never succeeded.'
+            failed: '%command%: last run failed (code %exit_code%).'
+            not_yet: '%command%: no heartbeat yet.'
+            never_ran: '%command% has never run since the recording started.'
+            unavailable: 'The heartbeats of the scheduled tasks cannot be read: run the migrations of the plugin, see the log.'
     category:
         environment: Environment
         data: Data

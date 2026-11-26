@@ -19,6 +19,9 @@ use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\Compiler\MessengerTra
 use Tmonier\SyliusPlatformHealthPlugin\Environment\CachePoolCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\WritableDirsCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\AppDebugCheck;
+use Tmonier\SyliusPlatformHealthPlugin\ScheduledTasks\DbalHeartbeatStore;
+use Tmonier\SyliusPlatformHealthPlugin\ScheduledTasks\HeartbeatCheck;
+use Tmonier\SyliusPlatformHealthPlugin\ScheduledTasks\HeartbeatRecorder;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\EndOfSupportTable;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\NativeOpcacheStateReader;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\OpcacheCheck;
@@ -266,6 +269,33 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
             'var/log' => param('kernel.logs_dir'),
             'public/media' => param('kernel.project_dir') . '/public/media',
         ]])
+        ->autoconfigure()
+    ;
+
+    // Heartbeat of the scheduled tasks (US-296): written at the end of each declared command, read by the probe only.
+    $services->set('tmonier_sylius_platform_health.scheduled_tasks.heartbeat_store', DbalHeartbeatStore::class)
+        ->args([service('doctrine.dbal.default_connection')])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.scheduled_tasks.heartbeat_recorder', HeartbeatRecorder::class)
+        ->args([
+            service('tmonier_sylius_platform_health.scheduled_tasks.heartbeat_store'),
+            service('clock'),
+            service('logger'),
+            param('tmonier_sylius_platform_health.scheduled_tasks.commands'),
+        ])
+        ->tag('kernel.event_subscriber')
+    ;
+
+    $services->set('tmonier_sylius_platform_health.scheduled_tasks.heartbeat', HeartbeatCheck::class)
+        ->args([
+            service('tmonier_sylius_platform_health.scheduled_tasks.heartbeat_store'),
+            service('clock'),
+            service('logger'),
+            param('tmonier_sylius_platform_health.scheduled_tasks.heartbeats'),
+            param('tmonier_sylius_platform_health.scheduled_tasks.warning_beats'),
+            param('tmonier_sylius_platform_health.scheduled_tasks.critical_beats'),
+        ])
         ->autoconfigure()
     ;
 };

@@ -7,6 +7,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\FixedMigrationStatusReader;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\BeatCommand;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoEnvironmentCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoShopCheck;
@@ -64,4 +65,7 @@ return static function (ContainerConfigurator $container): void {
     // US-295: the queues as the probes read them, and a Doctrine transport of Sylius to put a message in.
     $services->alias('tmonier_sylius_platform_health.test.data.messenger_queues', 'tmonier_sylius_platform_health.data.messenger_queues')->public();
     $services->alias('tmonier_sylius_platform_health.test.transport.main', 'messenger.transport.main')->public();
+    // US-296: a declared command to run, and the store of its heartbeat.
+    $services->set(BeatCommand::class)->autoconfigure();
+    $services->alias('tmonier_sylius_platform_health.test.heartbeat_store', 'tmonier_sylius_platform_health.scheduled_tasks.heartbeat_store')->public();
 };

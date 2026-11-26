@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping">
+
+    <!-- One row per declared console command (US-296); written through DBAL by DbalHeartbeatStore. -->
+    <entity name="Tmonier\SyliusPlatformHealthPlugin\Entity\Heartbeat" table="tmonier_platform_health_heartbeat">
+        <id name="command" column="command" type="string" length="255" />
+
+        <field name="firstRecordedAt" column="first_recorded_at" type="datetime_immutable" />
+        <field name="lastRunAt" column="last_run_at" type="datetime_immutable" />
+        <field name="lastExitCode" column="last_exit_code" type="integer" />
+        <field name="lastSuccessAt" column="last_success_at" type="datetime_immutable" nullable="true" />
+    </entity>
+
+</doctrine-mapping>

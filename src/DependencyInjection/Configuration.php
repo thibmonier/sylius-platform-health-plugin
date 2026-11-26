@@ -6,9 +6,12 @@ namespace Tmonier\SyliusPlatformHealthPlugin\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Tmonier\SyliusPlatformHealthPlugin\ScheduledTasks\BeatInterval;
 
 final class Configuration implements ConfigurationInterface
 {
+    private const COMMAND = '/^[A-Za-z0-9][A-Za-z0-9:_.-]*$/';
+
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('tmonier_sylius_platform_health');
@@ -45,6 +48,41 @@ final class Configuration implements ConfigurationInterface
                             ->defaultValue(180)
                             ->min(0)
                         ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('scheduled_tasks')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('heartbeats')
+                            ->info('Console commands whose end is recorded, with the rhythm they run at ("15m", "1h", "1d"). An undeclared command is never recorded.')
+                            ->example(['tmonier:feeds:generate' => '15m', 'sylius:remove-expired-carts' => '1d'])
+                            ->normalizeKeys(false)
+                            ->useAttributeAsKey('command')
+                            ->scalarPrototype()
+                                ->validate()
+                                    ->ifTrue(static fn (mixed $beat): bool => null === BeatInterval::seconds($beat))
+                                    ->thenInvalid('A heartbeat is a positive duration such as "30s", "15m", "1h" or "1d", got %s.')
+                                ->end()
+                            ->end()
+                            ->validate()
+                                ->ifTrue(static fn (array $heartbeats): bool => [] !== array_filter(array_keys($heartbeats), static fn (int|string $command): bool => 1 !== preg_match(self::COMMAND, (string) $command)))
+                                ->thenInvalid('A heartbeat is declared for a console command name such as "app:demo:reset", got %s.')
+                            ->end()
+                        ->end()
+                        ->integerNode('warning_beats')
+                            ->info('Missed rhythms after which a command without success warns.')
+                            ->defaultValue(2)
+                            ->min(1)
+                        ->end()
+                        ->integerNode('critical_beats')
+                            ->info('Missed rhythms after which it is critical; above warning_beats.')
+                            ->defaultValue(4)
+                            ->min(1)
+                        ->end()
+                    ->end()
+                    ->validate()
+                        ->ifTrue(static fn (array $tasks): bool => $tasks['critical_beats'] <= $tasks['warning_beats'])
+                        ->thenInvalid('critical_beats must be above warning_beats, got %s.')
                     ->end()
                 ->end()
                 ->arrayNode('data')

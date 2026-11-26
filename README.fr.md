@@ -9,7 +9,7 @@
 
 ## État
 
-Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, huit sondes d'environnement et sept sondes de données** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug, cache de l'application, dossiers inscriptibles ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables, files Messenger, âge du plus ancien message, messages en échec), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, huit sondes d'environnement, sept sondes de données et un battement des tâches planifiées** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug, cache de l'application, dossiers inscriptibles ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables, files Messenger, âge du plus ancien message, messages en échec ; commandes cron déclarées qui ne réussissent plus), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
@@ -159,6 +159,40 @@ tmonier_sylius_platform_health:
 ```
 
 Déclarez les tables qu'une purge planifiée garde petites (journaux, historiques, messages envoyés) : quand la purge s'arrête, l'estimation dépasse son seuil. L'estimation est celle que la base tient pour son planificateur de requêtes ; elle suit le nombre réel avec du retard (PostgreSQL lit `0` pour une table jamais analysée), ce qui suffit pour un ordre de grandeur. Le calcul de la dérive du schéma charge tout le mapping : il tient dans le budget de temps de l'exécuteur avec le cache de métadonnées de production ; sinon, la sonde lit `unknown` (« budget de temps dépassé »), comme toute sonde lente.
+
+## Battement des tâches planifiées
+
+Un cron qui s'arrête n'écrit rien dans aucun journal. La sonde `scheduled_tasks.heartbeat` détecte **l'absence de succès** : chaque commande console déclarée enregistre la fin de ses exécutions, et la sonde compare le dernier succès au rythme déclaré.
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    scheduled_tasks:
+        heartbeats:                              # aucune commande surveillée par défaut
+            'tmonier:feeds:generate': '15m'      # le rythme de son cron : « 30s », « 15m », « 1h », « 1d »
+            'sylius:remove-expired-carts': '1d'
+            'messenger:consume': '5m'
+        warning_beats: 2                         # rythmes manqués au-delà desquels une commande alerte
+        critical_beats: 4                        # et au-delà desquels elle est critique
+```
+
+Le rythme se déclare en configuration, jamais par un attribut sur la commande : la commande d'un autre plugin se surveille sans y toucher. Noms et rythmes sont validés à la compilation du conteneur.
+
+**Enregistrement.** Un écouteur de `ConsoleEvents::TERMINATE` met à jour **une ligne par commande déclarée** dans la table `tmonier_platform_health_heartbeat` (premier enregistrement, dernier lancement, dernier code de sortie, dernier succès) ; une commande non déclarée n'est jamais enregistrée. La ligne est écrite par DBAL en fin de commande, jamais par l'entity manager : rien de ce que la commande a laissé sans `flush` n'est écrit avec elle. Une panne d'enregistrement va au journal ; **la commande garde son code de sortie**.
+
+**La table** est la première entité du plugin. Sa migration est livrée avec le plugin (Sylius Labs migrations extra, après les migrations de Sylius) : lancer `bin/console doctrine:migrations:migrate` après la mise à jour.
+
+| État d'une commande déclarée | Statut |
+|---|---|
+| dernier succès en moins de `warning_beats` rythmes | `ok`, avec l'heure du dernier succès |
+| dernier lancement en échec (code de sortie non nul) | `warning` « dernier lancement en échec », avec le code |
+| aucun succès depuis plus de `warning_beats` rythmes | `warning` |
+| aucun succès depuis plus de `critical_beats` rythmes, ou lancements jamais réussis | `critical` |
+| jamais lancée, enregistrement commencé il y a moins de `warning_beats` rythmes | `unknown` « pas encore de battement » |
+| jamais lancée, alors que l'enregistrement a commencé avant | `warning` |
+| table illisible (migration non lancée) | `unknown`, la cause au journal seulement |
+
+La sonde prend la pire commande comme synthèse et donne une ligne par commande déclarée dans le détail. Elle ne fait que lire : aucune écriture pendant le rendu de la page. Le nom de la commande est affiché, jamais ses arguments ni sa sortie.
 
 ## Le contrat
 

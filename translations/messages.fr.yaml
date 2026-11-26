@@ -69,6 +69,17 @@ tmonier_platform_health:
             others: '{1} Une autre table dépasse son seuil.|]1,Inf] %count% autres tables dépassent leur seuil.'
             missing: 'La table surveillée %table% est introuvable.'
             unsupported_platform: 'Cette base de données ne fournit pas d''estimation du nombre de lignes.'
+    scheduled_tasks:
+        heartbeat:
+            none: 'Aucune tâche planifiée déclarée.'
+            ok: '{1} La tâche planifiée déclarée a réussi à son rythme.|]1,Inf] Les %count% tâches planifiées déclarées ont réussi à leur rythme.'
+            line_ok: '%command% : dernier succès le %last_success%'
+            late: '%command% n''a plus réussi depuis le %last_success%.'
+            never_succeeded: '%command% se lance mais n''a jamais réussi.'
+            failed: '%command% : dernier lancement en échec (code %exit_code%).'
+            not_yet: '%command% : pas encore de battement.'
+            never_ran: '%command% ne s''est jamais lancée depuis le début de l''enregistrement.'
+            unavailable: 'Les battements des tâches planifiées sont illisibles : lancer les migrations du plugin, voir le journal.'
     category:
         environment: Environnement
         data: Données

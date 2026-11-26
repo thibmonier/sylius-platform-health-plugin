@@ -25,6 +25,7 @@ final class PluginChecks
         'data.messenger_failed',
         'environment.cache_pool',
         'environment.writable_dirs',
+        'scheduled_tasks.heartbeat',
     ];
 
     public static function ships(string $identifier): bool

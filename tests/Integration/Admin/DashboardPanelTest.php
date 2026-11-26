@@ -55,7 +55,7 @@ final class DashboardPanelTest extends WebTestCase
 
         self::assertSame(self::FIVE_PROBES, ProbeExecutions::count());
         self::assertSame(
-            ['shop:Critical', 'environment:Warning', 'data:Warning', 'plugins:Not measurable'],
+            ['shop:Critical', 'environment:Warning', 'data:Warning', 'scheduled_tasks:Not measurable', 'plugins:Not measurable'],
             $panel->filter('[data-test-health-dashboard-category]')->each(static fn (Crawler $row): string => $row->attr('data-test-health-dashboard-category') . ':' . trim($row->filter('[data-test-health-category-status]')->text())),
         );
     }
@@ -65,7 +65,7 @@ final class DashboardPanelTest extends WebTestCase
         $panel = $this->deferredPanel($this->client->request('GET', self::DASHBOARD));
 
         self::assertSame(
-            ['critical', 'warning', 'warning', 'unknown'],
+            ['critical', 'warning', 'warning', 'unknown', 'unknown'],
             $panel->filter('[data-test-health-dashboard-category] [data-test-health-icon]')->each(static fn (Crawler $icon): string => (string) $icon->attr('data-test-health-icon')),
         );
     }
@@ -110,7 +110,7 @@ final class DashboardPanelTest extends WebTestCase
         $panel = $this->deferredPanel($this->client->request('GET', self::DASHBOARD));
 
         self::assertSame(self::FIVE_PROBES, ProbeExecutions::count());
-        self::assertCount(4, $panel->filter('[data-test-health-dashboard-category]'));
+        self::assertCount(5, $panel->filter('[data-test-health-dashboard-category]'));
     }
 
     public function testTheDashboardFeedsTheCacheThePageReads(): void

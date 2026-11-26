@@ -9,7 +9,7 @@
 
 ## Status
 
-The plugin ships the **contract, the runner, the administration page, a dashboard panel, eight environment probes and seven data probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode, application cache, writable directories; database connection, pending migrations, schema drift, table growth, Messenger queues, age of the oldest message, failed messages), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
+The plugin ships the **contract, the runner, the administration page, a dashboard panel, eight environment probes, seven data probes and a heartbeat of the scheduled tasks** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode, application cache, writable directories; database connection, pending migrations, schema drift, table growth, Messenger queues, age of the oldest message, failed messages; declared cron commands that no longer succeed), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
@@ -159,6 +159,40 @@ tmonier_sylius_platform_health:
 ```
 
 Declare the tables that a scheduled purge keeps small (logs, journals, sent messages): when the purge stops, the estimate grows past its threshold. The estimate is the one the database keeps for its query planner; it lags behind the real count (PostgreSQL reads `0` for a table never analysed), which is enough for an order of magnitude. Computing the schema drift loads the whole mapping: it fits in the time budget of the runner with the production metadata cache; if it does not, the probe reads `unknown` ("time budget exceeded"), like any slow probe.
+
+## Scheduled tasks heartbeat
+
+A cron that stops writes nothing in any log. The `scheduled_tasks.heartbeat` probe detects **the absence of a success**: each declared console command records the end of its runs, and the probe compares the last success with the rhythm declared.
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    scheduled_tasks:
+        heartbeats:                              # no command is watched by default
+            'tmonier:feeds:generate': '15m'      # the rhythm of its cron: "30s", "15m", "1h", "1d"
+            'sylius:remove-expired-carts': '1d'
+            'messenger:consume': '5m'
+        warning_beats: 2                         # missed rhythms after which a command warns
+        critical_beats: 4                        # and after which it is critical
+```
+
+The rhythm is declared in configuration, never by an attribute on the command, so that a command of another plugin can be watched without touching it. Names and rhythms are validated when the container is compiled.
+
+**Recording.** A `ConsoleEvents::TERMINATE` listener updates **one row per declared command** in the `tmonier_platform_health_heartbeat` table (first record, last run, last exit code, last success); an undeclared command is never recorded. The row is written through DBAL at the end of the command, never through the entity manager: nothing the command left unflushed is written with it. A failure to record goes to the log; **the command keeps its exit code**.
+
+**The table** is the first entity of the plugin. Its migration ships with the plugin (Sylius Labs migrations extra, after the Sylius migrations): run `bin/console doctrine:migrations:migrate` after the update.
+
+| State of a declared command | Status |
+|---|---|
+| last success within `warning_beats` rhythms | `ok`, with the time of the last success |
+| last run failed (non-zero exit code) | `warning` "last run failed", with the code |
+| no success for more than `warning_beats` rhythms | `warning` |
+| no success for more than `critical_beats` rhythms, or runs that never succeeded | `critical` |
+| never run, and the recording started less than `warning_beats` rhythms ago | `unknown` "no heartbeat yet" |
+| never run, while the recording started earlier | `warning` |
+| table unreadable (migration not run) | `unknown`, the cause in the log only |
+
+The probe reads the worst command as its summary and gives one line per declared command in the detail. It only reads: it never writes during the rendering of the page. The name of the command is shown, never its arguments nor its output.
 
 ## The contract
 
