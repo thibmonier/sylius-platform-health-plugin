@@ -234,6 +234,91 @@ final class PendingImportsCheck implements HealthCheckInterface
 
 Declare it as a service with autoconfiguration (the default of a Symfony application): that is all.
 
+## Provide a probe from your plugin
+
+A plugin such as a webhook outbox can ship its own probe **without making the health plugin a dependency**: a shop that installs the webhooks plugin gets no health screen it did not ask for, and the probe shows up as soon as the health plugin is added. The pattern has four parts.
+
+**1. `suggest` and `require-dev`, never `require`.** The health plugin is suggested to the integrator and installed for your own tests only:
+
+```json
+{
+    "require": {
+        "php": "^8.2",
+        "sylius/sylius": "^2.2.9 || ^2.3"
+    },
+    "require-dev": {
+        "tmonier/sylius-platform-health-plugin": "^0.4"
+    },
+    "suggest": {
+        "tmonier/sylius-platform-health-plugin": "Shows the health probe of this plugin on the administration page and dashboard"
+    }
+}
+```
+
+**2. The probes in a services file of their own**, `config/health_checks.php`, apart from the other services of the plugin. Autoconfiguration gives them their tag, never tag them by hand:
+
+```php
+return static function (ContainerConfigurator $container): void {
+    $container->services()
+        ->set('acme_webhooks.health.outbox', OutboxCheck::class)
+        ->autoconfigure()
+    ;
+};
+```
+
+**3. An extension that loads that file only if the interface exists.** `HealthCheckInterface::class` is a plain string, it does not load the interface: without the health plugin the probe class (which implements it) is never autoloaded, so there is no fatal error on an absent interface. The check is a `\Closure` passed to the constructor, `interface_exists(...)` by default, so that a test can answer "absent":
+
+```php
+final class AcmeWebhooksExtension extends Extension
+{
+    /** @var \Closure(string): bool */
+    private readonly \Closure $interfaceExists;
+
+    /**
+     * @param (\Closure(string): bool)|null $interfaceExists
+     */
+    public function __construct(?\Closure $interfaceExists = null)
+    {
+        $this->interfaceExists = $interfaceExists ?? interface_exists(...);
+    }
+
+    public function load(array $configs, ContainerBuilder $container): void
+    {
+        (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('services.php');
+
+        if (($this->interfaceExists)(HealthCheckInterface::class)) {
+            (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('health_checks.php');
+        }
+    }
+}
+```
+
+The bundle takes the same optional closure and hands it to its extension (the application builds it without argument, a test passes `static fn (string $interface): bool => false` to play a shop without the health plugin):
+
+```php
+final class AcmeWebhooksBundle extends Bundle
+{
+    /**
+     * @param (\Closure(string): bool)|null $interfaceExists
+     */
+    public function __construct(private readonly ?\Closure $interfaceExists = null)
+    {
+    }
+
+    protected function createContainerExtension(): ExtensionInterface
+    {
+        return new AcmeWebhooksExtension($this->interfaceExists);
+    }
+}
+```
+
+
+**4. The probe**, as in the section above (`identifier()`, `category()`, `run()`), in the `plugins` category or the one that fits. A probe of yours that throws is a probe like any other: `unknown`, the cause logged, the other probes still answer.
+
+Without any probe, a category is **hidden**: neither on the page nor in the dashboard panel, never shown empty or in error.
+
+The repository applies the pattern in its test application: the demonstration plugin in `tests/Fixture/DemoWebhooks` (bundle, extension, `config/health_checks.php`, a `composer.json`), and `tests/Fixture/WithoutHealthPluginKernel.php`, a kernel that builds it with the check answering "absent".
+
 ## What the runner guarantees
 
 - **An exception never reaches the caller.** Any `\Throwable` is logged with its trace (PSR-3 `exception` context) and the probe answers `unknown` with a generic summary: neither the trace nor the raw message is rendered.

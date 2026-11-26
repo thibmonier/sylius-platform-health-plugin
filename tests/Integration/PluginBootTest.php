@@ -35,6 +35,9 @@ final class PluginBootTest extends KernelTestCase
                 'shop.demo' => HealthStatus::Critical,
                 'plugins.demo' => HealthStatus::Unknown,
                 'plugins.failing' => HealthStatus::Unknown,
+                // US-303: the two probes of the demonstration plugin, which provides them without requiring the health plugin.
+                'demo_webhooks.outbox' => HealthStatus::Ok,
+                'demo_webhooks.broken' => HealthStatus::Unknown,
             ],
             array_column(array_map(static fn (HealthCheckReport $report): array => [$report->identifier, $report->result->status], $reports), 1, 0),
         );

@@ -234,6 +234,91 @@ final class PendingImportsCheck implements HealthCheckInterface
 
 Déclarez-la comme service avec l'autoconfiguration (le défaut d'une application Symfony) : c'est tout.
 
+## Fournir une sonde depuis son plugin
+
+Un plugin comme un outbox de webhooks peut fournir sa propre sonde **sans faire du plugin de santé une dépendance** : une boutique qui installe le plugin de webhooks n'obtient pas un écran de santé qu'elle n'a pas demandé, et la sonde apparaît dès que le plugin de santé est ajouté. Le motif tient en quatre éléments.
+
+**1. `suggest` et `require-dev`, jamais `require`.** Le plugin de santé est suggéré à l'intégrateur et installé pour vos seuls tests :
+
+```json
+{
+    "require": {
+        "php": "^8.2",
+        "sylius/sylius": "^2.2.9 || ^2.3"
+    },
+    "require-dev": {
+        "tmonier/sylius-platform-health-plugin": "^0.4"
+    },
+    "suggest": {
+        "tmonier/sylius-platform-health-plugin": "Affiche la sonde de santé de ce plugin sur la page et le tableau de bord d'administration"
+    }
+}
+```
+
+**2. Les sondes dans un fichier de services à part**, `config/health_checks.php`, séparé des autres services du plugin. L'autoconfiguration leur donne leur tag, ne les taguez jamais à la main :
+
+```php
+return static function (ContainerConfigurator $container): void {
+    $container->services()
+        ->set('acme_webhooks.health.outbox', OutboxCheck::class)
+        ->autoconfigure()
+    ;
+};
+```
+
+**3. Une extension qui ne charge ce fichier que si l'interface existe.** `HealthCheckInterface::class` est une simple chaîne, elle ne charge pas l'interface : sans le plugin de santé, la classe de la sonde (qui l'implémente) n'est jamais chargée par l'autoloader, donc pas d'erreur fatale sur une interface absente. La vérification est un `\Closure` passé au constructeur, `interface_exists(...)` par défaut, pour qu'un test puisse répondre « absente » :
+
+```php
+final class AcmeWebhooksExtension extends Extension
+{
+    /** @var \Closure(string): bool */
+    private readonly \Closure $interfaceExists;
+
+    /**
+     * @param (\Closure(string): bool)|null $interfaceExists
+     */
+    public function __construct(?\Closure $interfaceExists = null)
+    {
+        $this->interfaceExists = $interfaceExists ?? interface_exists(...);
+    }
+
+    public function load(array $configs, ContainerBuilder $container): void
+    {
+        (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('services.php');
+
+        if (($this->interfaceExists)(HealthCheckInterface::class)) {
+            (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('health_checks.php');
+        }
+    }
+}
+```
+
+Le bundle reçoit le même closure facultatif et le transmet à son extension (l'application le construit sans argument, un test passe `static fn (string $interface): bool => false` pour jouer une boutique sans le plugin de santé) :
+
+```php
+final class AcmeWebhooksBundle extends Bundle
+{
+    /**
+     * @param (\Closure(string): bool)|null $interfaceExists
+     */
+    public function __construct(private readonly ?\Closure $interfaceExists = null)
+    {
+    }
+
+    protected function createContainerExtension(): ExtensionInterface
+    {
+        return new AcmeWebhooksExtension($this->interfaceExists);
+    }
+}
+```
+
+
+**4. La sonde**, comme dans la section précédente (`identifier()`, `category()`, `run()`), dans la catégorie `plugins` ou celle qui convient. Une sonde de votre plugin qui lève une exception est une sonde comme une autre : `unknown`, la cause journalisée, les autres sondes répondent.
+
+Sans aucune sonde, une catégorie est **masquée** : ni sur la page ni dans l'encart du tableau de bord, jamais affichée vide ni en erreur.
+
+Le dépôt applique ce motif dans son application de test : le plugin de démonstration dans `tests/Fixture/DemoWebhooks` (bundle, extension, `config/health_checks.php`, un `composer.json`), et `tests/Fixture/WithoutHealthPluginKernel.php`, un noyau qui le construit avec la vérification qui répond « absente ».
+
 ## Ce que l'exécuteur garantit
 
 - **Aucune exception ne remonte à l'appelant.** Tout `\Throwable` est journalisé avec sa trace (contexte PSR-3 `exception`) et la sonde répond `unknown` avec un résumé générique : ni la trace ni le message brut ne sont affichés.

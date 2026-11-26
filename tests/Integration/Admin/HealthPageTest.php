@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Fixture\DemoWebhooks\Health\BrokenCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\FailingCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\ProbeExecutions;
 
@@ -107,6 +108,30 @@ final class HealthPageTest extends WebTestCase
         self::assertStringContainsString('The check could not be completed', $results->filter('[data-test-health-check="plugins.failing"]')->text());
         self::assertStringNotContainsString('hunter2', (string) $this->client->getResponse()->getContent());
         self::assertStringNotContainsString(FailingCheck::SECRET, (string) $this->client->getResponse()->getContent());
+    }
+
+    public function testTheProbeOfAnotherPluginIsListedInItsCategory(): void
+    {
+        $this->client->loginUser($this->admin(), 'admin');
+
+        $results = $this->deferredResults($this->client->request('GET', self::PAGE));
+
+        $row = $results->filter('[data-test-health-category="plugins"] [data-test-health-check="demo_webhooks.outbox"]');
+        self::assertCount(1, $row);
+        self::assertSame('ok', $row->attr('data-test-health-status'));
+    }
+
+    public function testAProbeOfAnotherPluginThatThrowsIsUnknownAndTheOtherProbesAreStillShown(): void
+    {
+        $this->client->loginUser($this->admin(), 'admin');
+
+        $results = $this->deferredResults($this->client->request('GET', self::PAGE));
+
+        self::assertCount(1, $results->filter('[data-test-health-check="demo_webhooks.broken"]'));
+        self::assertSame('unknown', $results->filter('[data-test-health-check="demo_webhooks.broken"]')->attr('data-test-health-status'));
+        self::assertStringNotContainsString(BrokenCheck::MESSAGE, (string) $this->client->getResponse()->getContent());
+        self::assertCount(1, $results->filter('[data-test-health-check="demo_webhooks.outbox"]'));
+        self::assertCount(1, $results->filter('[data-test-health-check="shop.demo"]'));
     }
 
     public function testASecondAdministratorWithinTheTtlGetsTheCachedResultsAndRunsNoCheck(): void
