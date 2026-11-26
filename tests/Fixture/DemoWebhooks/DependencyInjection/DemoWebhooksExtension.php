@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Tmonier\SyliusPlatformHealthPlugin\Fixture\DemoWebhooks\DependencyInjection;
 
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 
 final class DemoWebhooksExtension extends Extension
@@ -23,7 +25,11 @@ final class DemoWebhooksExtension extends Extension
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        // T-303-02 loads config/health_checks.php here when the interface exists.
-        ($this->interfaceExists)(HealthCheckInterface::class);
+        // HealthCheckInterface::class is only a string here: it does not load the interface, so a shop without the health plugin never hits a fatal error.
+        if (!($this->interfaceExists)(HealthCheckInterface::class)) {
+            return;
+        }
+
+        (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../config')))->load('health_checks.php');
     }
 }

@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Probes provided by another plugin, the health plugin staying optional for it (US-303): the plugin declares the health plugin in `suggest` and `require-dev` (never `require`), keeps its probes in a services file of their own (`config/health_checks.php`) and its extension loads that file only when `HealthCheckInterface` exists, through an injectable `\Closure` check (`interface_exists(...)` by default). README (English and French) section with a complete example; a demonstration plugin in `tests/Fixture/DemoWebhooks` and a kernel without the health plugin in the test application. A category without any probe is hidden on the page and in the dashboard panel (already the behaviour of the summary builder, now covered by tests).
+
 ## [0.4.0] - 2026-11-26
 
 ### Changed
