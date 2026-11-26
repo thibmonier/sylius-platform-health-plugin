@@ -218,7 +218,7 @@ Le code se calcule sur les sondes retenues par les filtres.
 | au moins une `unknown`, aucune `critical` (une sonde qui ne mesure pas ne passe pas une porte de CI en silence) | **1** |
 | au moins une `critical`, quelles que soient les autres | **2** |
 | option invalide : `--category` inconnue, `--only` qui ne désigne aucune sonde, `--format` inconnu | **3**, avec un message qui nomme la valeur refusée |
-| aucune sonde après des filtres valides (catégorie connue mais sans sonde) | **0**, avec le message « Aucune sonde ne correspond à la sélection. » |
+| aucune sonde après des filtres valides (catégorie connue mais sans sonde) | **0**, avec le message « Aucun contrôle ne correspond à la sélection. » |
 
 Le 3 est distinct du 2 à dessein : une faute de frappe dans un job de CI ne doit pas se lire comme « critique ». Une sonde qui lève une exception est `unknown` (donc 1) : l'exception va au journal de l'application, jamais à la sortie.
 
