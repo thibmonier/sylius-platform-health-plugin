@@ -17,6 +17,11 @@ final class TranslationRules
     private const STALE = ['ne fournit aucun', 'ships no'];
 
     /**
+     * The console has no page: it speaks of probes ("sondes"), the word of the documentation and of the command.
+     */
+    private const CONSOLE_PREFIX = 'tmonier_platform_health.console.';
+
+    /**
      * The vocabulary of the page is "check" / "contrôle"; "probe" and "sonde" name the concept in the documentation.
      */
     private const VOCABULARY = ['en' => 'probe', 'fr' => 'sonde'];
@@ -90,7 +95,7 @@ final class TranslationRules
     {
         $violations = [];
         foreach ($catalogue as $key => $text) {
-            foreach (self::problems($text, $locale) as $problem) {
+            foreach (self::problems($key, $text, $locale) as $problem) {
                 $violations[] = $key . ': ' . $problem;
             }
         }
@@ -101,7 +106,7 @@ final class TranslationRules
     /**
      * @return list<string>
      */
-    private static function problems(string $text, string $locale): array
+    private static function problems(string $key, string $text, string $locale): array
     {
         $problems = [];
         $lowered = mb_strtolower($text);
@@ -110,7 +115,7 @@ final class TranslationRules
                 $problems[] = sprintf('stale wording "%s"', $phrase);
             }
         }
-        if (str_contains($lowered, self::VOCABULARY[$locale])) {
+        if (!str_starts_with($key, self::CONSOLE_PREFIX) && str_contains($lowered, self::VOCABULARY[$locale])) {
             $problems[] = sprintf('says "%s" where the page says "%s"', self::VOCABULARY[$locale], 'en' === $locale ? 'check' : 'contrôle');
         }
         if (str_contains($text, '...')) {
