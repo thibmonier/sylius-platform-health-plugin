@@ -20,6 +20,11 @@ final class PluginChecks
         'data.pending_migrations',
         'data.schema_drift',
         'data.table_growth',
+        'data.messenger_pending',
+        'data.messenger_oldest',
+        'data.messenger_failed',
+        'environment.cache_pool',
+        'environment.writable_dirs',
     ];
 
     public static function ships(string $identifier): bool

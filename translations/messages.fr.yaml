@@ -27,6 +27,12 @@ tmonier_platform_health:
             ok: 'Environnement de production, mode debug désactivé.'
             debug_in_prod: 'Le mode debug est actif en production.'
             not_prod: 'L''application tourne dans l''environnement « %environment% », pas en production.'
+        cache_pool:
+            ok: 'Le cache de l''application garde ce qu''on lui confie.'
+            failed: 'Le cache de l''application ne garde pas ce qu''on lui confie : voir le journal et sa configuration.'
+        writable_dirs:
+            ok: 'Les dossiers de cache, de journaux et de médias sont inscriptibles.'
+            not_writable: 'Dossiers non inscriptibles : %directories%.'
     data:
         connection:
             ok: 'La base de données répond (%duration_ms% ms).'
@@ -41,6 +47,21 @@ tmonier_platform_health:
             ok: 'Le schéma de la base est conforme au mapping Doctrine.'
             drift: '{1} Le schéma de la base s''écarte du mapping : une instruction à appliquer.|]1,Inf] Le schéma de la base s''écarte du mapping : %count% instructions à appliquer.'
             not_available: 'Pas d''ORM Doctrine : l''écart du schéma n''est pas mesurable.'
+        messenger:
+            no_transport: 'Aucun transport Messenger asynchrone.'
+        messenger_pending:
+            ok: 'Aucune file ne dépasse %threshold% messages en attente.'
+            over: 'Le transport %transport% compte %count% messages en attente (seuil : %threshold%).'
+            not_countable: 'Le transport %transport% ne permet pas de compter ses messages.'
+        messenger_oldest:
+            ok: 'Aucun message n''attend depuis plus de %minutes% min.'
+            late: 'Le plus ancien message du transport %transport% attend depuis %minutes% min.'
+            not_measurable: 'L''âge des messages ne se mesure que sur un transport Doctrine.'
+        messenger_failed:
+            ok: 'Aucun message en échec.'
+            failed: '{1} Un message en échec.|]1,Inf] %count% messages en échec.'
+            no_failure_transport: 'Sans transport d''échec, un message qui échoue est perdu : %transports%.'
+            not_countable: 'Le transport d''échec %transport% ne permet pas de compter ses messages.'
         table_growth:
             none: 'Aucune table surveillée.'
             ok: '{1} La table surveillée est sous son seuil.|]1,Inf] Les %count% tables surveillées sont sous leur seuil.'

@@ -9,7 +9,7 @@
 
 ## État
 
-Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, six sondes d'environnement et quatre sondes de données** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, huit sondes d'environnement et sept sondes de données** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug, cache de l'application, dossiers inscriptibles ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables, files Messenger, âge du plus ancien message, messages en échec), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
@@ -107,7 +107,7 @@ Hors périmètre : AAA, droite à gauche, couleurs forcées au-delà d'un contr�
 
 ## Sondes d'environnement
 
-Six sondes de la catégorie `environment`, enregistrées par le plugin lui-même (rien à déclarer), en lecture seule, **sans appel réseau**, sans jamais afficher la valeur d'une variable d'environnement. Chaque résultat qui n'est pas `ok` renvoie vers cette documentation (`Corriger`).
+Huit sondes de la catégorie `environment`, enregistrées par le plugin lui-même (rien à déclarer), en lecture seule, **sans appel réseau**, sans jamais afficher la valeur d'une variable d'environnement. Chaque résultat qui n'est pas `ok` renvoie vers cette documentation (`Corriger`).
 
 | Identifiant | Mesure | Statuts |
 |---|---|---|
@@ -117,6 +117,8 @@ Six sondes de la catégorie `environment`, enregistrées par le plugin lui-même
 | `environment.php_extensions` | `intl`, `mbstring`, `ctype`, `iconv`, `xml`, `curl`, `pdo`, `gd` ou `imagick` | `ok` ; `critical` qui liste **seulement les manquantes** |
 | `environment.opcache` | OPcache actif pour le SAPI qui sert la page | `ok` ; `warning` si inactif ; `unknown` si l'API est restreinte (`opcache.restrict_api`) |
 | `environment.app_debug` | `kernel.debug` et `kernel.environment` | `ok` en prod sans debug ; `critical` avec debug en prod ; `warning` hors prod |
+| `environment.cache_pool` | une clé témoin du plugin écrite, relue puis supprimée dans `cache.app` | `ok` ; `critical` si le cache la perd ou lève une exception (la cause, qui peut contenir le DSN du serveur de cache, n'est jamais affichée) |
+| `environment.writable_dirs` | `var/cache`, `var/log` et `public/media` (ou son parent avant le premier envoi) inscriptibles par PHP | `ok` ; `critical` qui liste les dossiers par leur nom **relatif**, jamais le chemin absolu du serveur |
 
 ```yaml
 # config/packages/tmonier_sylius_platform_health.yaml
@@ -129,7 +131,7 @@ tmonier_sylius_platform_health:
 
 ## Sondes de données
 
-Quatre sondes de la catégorie `data`, enregistrées par le plugin (rien à déclarer), **en lecture seule** : aucune n'exécute de migration, ne modifie le schéma ni ne compte les lignes d'une table. Seule la connexion Doctrine par défaut est sondée. Chaque résultat autre que `ok` renvoie à cette documentation (`Corriger`).
+Sept sondes de la catégorie `data`, enregistrées par le plugin (rien à déclarer), **en lecture seule** : aucune n'exécute de migration, ne modifie le schéma, ne compte les lignes d'une table, ni ne consomme, ne rejoue ou ne supprime un message Messenger. Seule la connexion Doctrine par défaut est sondée. Chaque résultat autre que `ok` renvoie à cette documentation (`Corriger`).
 
 | Identifiant | Mesure | Statuts |
 |---|---|---|
@@ -137,12 +139,20 @@ Quatre sondes de la catégorie `data`, enregistrées par le plugin (rien à déc
 | `data.pending_migrations` | migrations Doctrine du code non exécutées, comme les rapporte `doctrine:migrations:status` | `ok` ; `critical` dès une migration en attente (lancer `bin/console doctrine:migrations:migrate`) ; `warning` pour une migration exécutée que le code ne connaît plus ; `unknown` sans migrations Doctrine |
 | `data.schema_drift` | instructions qui aligneraient la base sur le mapping Doctrine (`doctrine:schema:update --dump-sql`) | `ok` ; `warning` avec le **nombre** d'instructions, jamais leur SQL (lancer `bin/console doctrine:schema:validate` pour les voir) ; `unknown` sans ORM Doctrine |
 | `data.table_growth` | nombre de lignes **estimé** des tables **déclarées**, lu dans le catalogue de la base (MySQL et MariaDB : `information_schema.TABLES`, PostgreSQL : `pg_class`), **jamais de `COUNT(*)`** | `ok` sous le seuil ; `warning` au-delà ; `critical` au-delà du double ; `unknown` pour une table introuvable ou une autre base |
+| `data.messenger_pending` | messages en attente de chaque transport Messenger qu'un worker consomme (transports d'échec, `sync://` et `in-memory://` mis à part) | `ok` ; `warning` qui nomme le transport le plus chargé au-delà de 100 messages ; `unknown` pour un transport qui ne sait pas compter |
+| `data.messenger_oldest` | depuis combien de temps attend le plus ancien message, lu par `MIN(available_at)` dans la table d'un transport **Doctrine** | `ok` ; `warning` au-delà de 15 min ; `critical` au-delà d'1 h (aucun worker ne consomme la file) ; `unknown` sans transport Doctrine |
+| `data.messenger_failed` | messages des transports d'échec, et transports qui n'en ont pas | `ok` ; `warning` dès un message en échec (critique au-delà de 100) ; `warning` qui nomme chaque transport **sans transport d'échec**, dont les messages en échec sont perdus |
 
 ```yaml
 # config/packages/tmonier_sylius_platform_health.yaml
 tmonier_sylius_platform_health:
     data:
         connection_warning_ms: 500      # data.connection alerte au-delà de ce temps de réponse
+        messenger:
+            pending_warning: 100        # messages en attente d'un transport à partir desquels data.messenger_pending alerte
+            oldest_warning_minutes: 15  # âge du plus ancien message à partir duquel data.messenger_oldest alerte
+            oldest_critical_minutes: 60 # et à partir duquel il est critique ; supérieur au seuil d'alerte
+            failed_critical: 100        # messages en échec au-delà desquels data.messenger_failed est critique
         table_growth:                   # aucune table surveillée par défaut
             tmonier_audit_log: 100000   # lignes estimées à partir desquelles la table alerte (critique au-delà de 200000)
             sylius_order: 2000000

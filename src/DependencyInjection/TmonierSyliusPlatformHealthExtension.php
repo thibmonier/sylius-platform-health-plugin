@@ -16,7 +16,7 @@ final class TmonierSyliusPlatformHealthExtension extends Extension implements Pr
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{time_budget_ms: int, cache_ttl: int, access: array{role: string}, environment: array{support_warning_days: int}, data: array{connection_warning_ms: int, table_growth: array<string, int>}} $config */
+        /** @var array{time_budget_ms: int, cache_ttl: int, access: array{role: string}, environment: array{support_warning_days: int}, data: array{connection_warning_ms: int, messenger: array{pending_warning: int, oldest_warning_minutes: int, oldest_critical_minutes: int, failed_critical: int}, table_growth: array<string, int>}} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('tmonier_sylius_platform_health.time_budget_ms', $config['time_budget_ms']);
@@ -25,6 +25,9 @@ final class TmonierSyliusPlatformHealthExtension extends Extension implements Pr
         $container->setParameter('tmonier_sylius_platform_health.environment.support_warning_days', $config['environment']['support_warning_days']);
         $container->setParameter('tmonier_sylius_platform_health.data.connection_warning_ms', $config['data']['connection_warning_ms']);
         $container->setParameter('tmonier_sylius_platform_health.data.table_growth', $config['data']['table_growth']);
+        foreach ($config['data']['messenger'] as $name => $value) {
+            $container->setParameter('tmonier_sylius_platform_health.data.messenger.' . $name, $value);
+        }
         $container->registerForAutoconfiguration(HealthCheckInterface::class)->addTag(HealthCheckInterface::TAG);
 
         (new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('services.php');

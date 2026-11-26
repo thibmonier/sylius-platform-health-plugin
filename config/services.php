@@ -11,6 +11,13 @@ use Tmonier\SyliusPlatformHealthPlugin\Data\OrmSchemaDriftReader;
 use Tmonier\SyliusPlatformHealthPlugin\Data\PendingMigrationsCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Data\SchemaDriftCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Data\TableGrowthCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\MessengerFailedCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\MessengerOldestCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\MessengerPendingCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Data\SymfonyMessengerQueues;
+use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\Compiler\MessengerTransportsPass;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\CachePoolCheck;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\WritableDirsCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\AppDebugCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\EndOfSupportTable;
 use Tmonier\SyliusPlatformHealthPlugin\Environment\NativeOpcacheStateReader;
@@ -33,6 +40,7 @@ use Tmonier\SyliusPlatformHealthPlugin\Twig\Component\HealthComponent;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\Component\HealthDashboardComponent;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\SafeTextExtension;
 
+use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -213,6 +221,51 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
             service('tmonier_sylius_platform_health.data.table_row_estimator'),
             param('tmonier_sylius_platform_health.data.table_growth'),
         ])
+        ->autoconfigure()
+    ;
+
+    // Queue probes (US-295): read-only, the transports are handed by MessengerTransportsPass; sync:// and in-memory:// ignored.
+    $services->set(MessengerTransportsPass::QUEUES, SymfonyMessengerQueues::class)
+        ->args([
+            abstract_arg('receivers, set by MessengerTransportsPass'),
+            [],
+            [],
+            service('doctrine')->nullOnInvalid(),
+        ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.messenger_pending', MessengerPendingCheck::class)
+        ->args([service(MessengerTransportsPass::QUEUES), param('tmonier_sylius_platform_health.data.messenger.pending_warning')])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.messenger_oldest', MessengerOldestCheck::class)
+        ->args([
+            service(MessengerTransportsPass::QUEUES),
+            service('clock'),
+            param('tmonier_sylius_platform_health.data.messenger.oldest_warning_minutes'),
+            param('tmonier_sylius_platform_health.data.messenger.oldest_critical_minutes'),
+        ])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.data.messenger_failed', MessengerFailedCheck::class)
+        ->args([service(MessengerTransportsPass::QUEUES), param('tmonier_sylius_platform_health.data.messenger.failed_critical')])
+        ->autoconfigure()
+    ;
+
+    // Environment probes of US-295: a round trip in the application cache, and the directories the application writes to.
+    $services->set('tmonier_sylius_platform_health.environment.cache_pool', CachePoolCheck::class)
+        ->args([service('cache.app')])
+        ->autoconfigure()
+    ;
+
+    $services->set('tmonier_sylius_platform_health.environment.writable_dirs', WritableDirsCheck::class)
+        ->args([[
+            'var/cache' => param('kernel.cache_dir'),
+            'var/log' => param('kernel.logs_dir'),
+            'public/media' => param('kernel.project_dir') . '/public/media',
+        ]])
         ->autoconfigure()
     ;
 };
