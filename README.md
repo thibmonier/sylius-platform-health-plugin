@@ -9,7 +9,7 @@
 
 ## Status
 
-The plugin ships the **contract, the runner, the administration page, a dashboard panel, six environment probes and four data probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode; database connection, pending migrations, schema drift, table growth), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
+The plugin ships the **contract, the runner, the administration page, a dashboard panel, eight environment probes and seven data probes** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode, application cache, writable directories; database connection, pending migrations, schema drift, table growth, Messenger queues, age of the oldest message, failed messages), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
@@ -107,7 +107,7 @@ What is not covered: AAA, right-to-left, forced colours beyond a manual look. Th
 
 ## Environment probes
 
-Six probes of the `environment` category, registered by the plugin itself (nothing to declare), read-only, **no network call**, no value of an environment variable ever displayed. Each non-`ok` result links to this documentation (`Fix`).
+Eight probes of the `environment` category, registered by the plugin itself (nothing to declare), read-only, **no network call**, no value of an environment variable ever displayed. Each non-`ok` result links to this documentation (`Fix`).
 
 | Identifier | Measures | Statuses |
 |---|---|---|
@@ -117,6 +117,8 @@ Six probes of the `environment` category, registered by the plugin itself (nothi
 | `environment.php_extensions` | `intl`, `mbstring`, `ctype`, `iconv`, `xml`, `curl`, `pdo`, `gd` or `imagick` | `ok`; `critical` listing **only the missing** extensions |
 | `environment.opcache` | OPcache active for the SAPI that serves the page | `ok`; `warning` if inactive; `unknown` if the API is restricted (`opcache.restrict_api`) |
 | `environment.app_debug` | `kernel.debug` and `kernel.environment` | `ok` in production without debug; `critical` with debug in production; `warning` outside production |
+| `environment.cache_pool` | a witness key of the plugin written, read back and deleted in `cache.app` | `ok`; `critical` when the cache loses it or throws (the cause, which may hold the DSN of the cache server, is never displayed) |
+| `environment.writable_dirs` | `var/cache`, `var/log` and `public/media` (or its parent before the first upload) writable by PHP | `ok`; `critical` listing the directories by their **relative** name, never the absolute path of the server |
 
 ```yaml
 # config/packages/tmonier_sylius_platform_health.yaml
@@ -129,7 +131,7 @@ tmonier_sylius_platform_health:
 
 ## Data probes
 
-Four probes of the `data` category, registered by the plugin (nothing to declare), **read-only**: none executes a migration, alters the schema or counts the rows of a table. Only the default Doctrine connection is probed. Each non-`ok` result links to this documentation (`Fix`).
+Seven probes of the `data` category, registered by the plugin (nothing to declare), **read-only**: none executes a migration, alters the schema, counts the rows of a table, or consumes, retries or removes a Messenger message. Only the default Doctrine connection is probed. Each non-`ok` result links to this documentation (`Fix`).
 
 | Identifier | Measures | Statuses |
 |---|---|---|
@@ -137,12 +139,20 @@ Four probes of the `data` category, registered by the plugin (nothing to declare
 | `data.pending_migrations` | Doctrine migrations of the code not executed, as `doctrine:migrations:status` reports them | `ok`; `critical` from one pending migration (run `bin/console doctrine:migrations:migrate`); `warning` for an executed migration the code no longer knows; `unknown` without Doctrine migrations |
 | `data.schema_drift` | statements that would align the database with the Doctrine mapping (`doctrine:schema:update --dump-sql`) | `ok`; `warning` with the **number** of statements, never their SQL (run `bin/console doctrine:schema:validate` to see them); `unknown` without a Doctrine ORM |
 | `data.table_growth` | estimated rows of the **declared** tables, read from the catalogue of the database (MySQL and MariaDB: `information_schema.TABLES`, PostgreSQL: `pg_class`), **never a `COUNT(*)`** | `ok` under the threshold; `warning` beyond it; `critical` beyond the double; `unknown` for a missing table or another database |
+| `data.messenger_pending` | waiting messages of each Messenger transport a worker consumes (failure transports, `sync://` and `in-memory://` set aside) | `ok`; `warning` naming the fullest transport beyond 100 messages; `unknown` for a transport that cannot count |
+| `data.messenger_oldest` | how long the oldest message has been waiting, read with `MIN(available_at)` on the table of a **Doctrine** transport | `ok`; `warning` beyond 15 min; `critical` beyond 1 h (no worker consumes the queue); `unknown` without a Doctrine transport |
+| `data.messenger_failed` | messages in the failure transports, and the transports that have none | `ok`; `warning` from one failed message (critical beyond 100); `warning` naming each transport **without a failure transport**, whose failed messages are lost |
 
 ```yaml
 # config/packages/tmonier_sylius_platform_health.yaml
 tmonier_sylius_platform_health:
     data:
         connection_warning_ms: 500      # data.connection warns beyond this answer time
+        messenger:
+            pending_warning: 100        # waiting messages of a transport from which data.messenger_pending warns
+            oldest_warning_minutes: 15  # age of the oldest message from which data.messenger_oldest warns
+            oldest_critical_minutes: 60 # and from which it is critical; must be above the warning
+            failed_critical: 100        # failed messages beyond which data.messenger_failed is critical
         table_growth:                   # no table is watched by default
             tmonier_audit_log: 100000   # estimated rows from which the table warns (critical beyond 200000)
             sylius_order: 2000000
