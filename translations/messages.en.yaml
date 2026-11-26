@@ -27,6 +27,12 @@ tmonier_platform_health:
             ok: 'Production environment, debug mode disabled.'
             debug_in_prod: 'Debug mode is active in production.'
             not_prod: 'The application runs in the "%environment%" environment, not in production.'
+        cache_pool:
+            ok: 'The application cache keeps what it is given.'
+            failed: 'The application cache does not keep what it is given: see the log and its configuration.'
+        writable_dirs:
+            ok: 'The cache, log and media directories are writable.'
+            not_writable: 'Directories not writable: %directories%.'
     data:
         connection:
             ok: 'The database answers (%duration_ms% ms).'
@@ -41,6 +47,21 @@ tmonier_platform_health:
             ok: 'The database schema matches the Doctrine mapping.'
             drift: '{1} The database schema differs from the mapping: one statement to apply.|]1,Inf] The database schema differs from the mapping: %count% statements to apply.'
             not_available: 'No Doctrine ORM: the schema drift cannot be measured.'
+        messenger:
+            no_transport: 'No asynchronous Messenger transport.'
+        messenger_pending:
+            ok: 'No queue holds more than %threshold% waiting messages.'
+            over: 'Transport %transport% holds %count% waiting messages (threshold: %threshold%).'
+            not_countable: 'Transport %transport% cannot count its messages.'
+        messenger_oldest:
+            ok: 'No message has been waiting for more than %minutes% min.'
+            late: 'The oldest message of transport %transport% has been waiting for %minutes% min.'
+            not_measurable: 'The age of the messages is measured on a Doctrine transport only.'
+        messenger_failed:
+            ok: 'No failed message.'
+            failed: '{1} One failed message.|]1,Inf] %count% failed messages.'
+            no_failure_transport: 'Without a failure transport, a message that fails is lost: %transports%.'
+            not_countable: 'Failure transport %transport% cannot count its messages.'
         table_growth:
             none: 'No table is watched.'
             ok: '{1} The watched table is under its threshold.|]1,Inf] The %count% watched tables are under their threshold.'
