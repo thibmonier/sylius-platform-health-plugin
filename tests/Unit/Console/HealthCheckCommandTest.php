@@ -101,7 +101,7 @@ final class HealthCheckCommandTest extends TestCase
         $tester = $this->tester($this->check('environment.php', HealthCategory::Environment, HealthStatus::Critical));
 
         self::assertSame(0, $tester->execute(['--category' => ['shop']]));
-        self::assertStringContainsString('aucune sonde', mb_strtolower($tester->getDisplay()));
+        self::assertStringContainsString('aucun contrôle', mb_strtolower($tester->getDisplay()));
     }
 
     public function testAnInvalidOptionRunsNoCheck(): void
