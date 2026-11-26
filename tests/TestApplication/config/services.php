@@ -50,4 +50,9 @@ return static function (ContainerConfigurator $container): void {
     ;
 
     $services->alias('tmonier_sylius_platform_health.test.runner', 'tmonier_sylius_platform_health.runner')->public();
+
+    // US-294: the readers of the data probes, reached by the integration tests against the database of the test application.
+    foreach (['connection_pinger', 'migration_status_reader', 'schema_drift_reader', 'table_row_estimator'] as $reader) {
+        $services->alias('tmonier_sylius_platform_health.test.data.' . $reader, 'tmonier_sylius_platform_health.data.' . $reader)->public();
+    }
 };

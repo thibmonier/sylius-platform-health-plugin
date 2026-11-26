@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Tmonier\SyliusPlatformHealthPlugin\Integration\DependencyInjection;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Clock\NativeClock;
@@ -14,6 +16,7 @@ use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoShopCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DuplicateMigrationsCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\MigrationsCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\StatefulIdentifierCheck;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\PluginChecks;
 use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\Compiler\UniqueIdentifierPass;
 use Tmonier\SyliusPlatformHealthPlugin\DependencyInjection\TmonierSyliusPlatformHealthExtension;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
@@ -43,10 +46,10 @@ final class HealthCheckContainerTest extends TestCase
         );
     }
 
-    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheSixEnvironmentChecksOfThePlugin(): void
+    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheTenChecksOfThePlugin(): void
     {
         self::assertSame([], $this->applicationReports($this->container()));
-        self::assertCount(6, $this->runner($this->container())->run());
+        self::assertCount(10, $this->runner($this->container())->run());
     }
 
     public function testTwoChecksWithTheSameIdentifierFailTheCompilationNamingTheIdentifierAndBothClasses(): void
@@ -91,6 +94,11 @@ final class HealthCheckContainerTest extends TestCase
         $container->register('clock', NativeClock::class);
         $container->setParameter('kernel.debug', false);
         $container->setParameter('kernel.environment', 'test');
+        // The data probes read the default Doctrine connection: an in-memory SQLite one, opened only if a probe queries it.
+        $container->register('doctrine.dbal.default_connection', Connection::class)
+            ->setFactory([DriverManager::class, 'getConnection'])
+            ->setArguments([['driver' => 'pdo_sqlite', 'memory' => true]])
+        ;
         foreach ($checkClasses as $checkClass) {
             $container->register($checkClass, $checkClass)->setAutoconfigured(true);
         }
@@ -112,13 +120,13 @@ final class HealthCheckContainerTest extends TestCase
     }
 
     /**
-     * @return list<HealthCheckReport> the reports of the checks of the application, without the six of the plugin
+     * @return list<HealthCheckReport> the reports of the checks of the application, without the ten of the plugin
      */
     private function applicationReports(ContainerBuilder $container): array
     {
         return array_values(array_filter(
             $this->runner($container)->run(),
-            static fn (HealthCheckReport $report): bool => !str_starts_with($report->identifier, 'environment.') || 'environment.demo' === $report->identifier,
+            static fn (HealthCheckReport $report): bool => !PluginChecks::ships($report->identifier),
         ));
     }
 

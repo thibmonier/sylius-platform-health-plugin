@@ -1,7 +1,11 @@
 imports:
     - { resource: "services.php" }
 
-tmonier_sylius_platform_health: ~
+tmonier_sylius_platform_health:
+    data:
+        # US-294: a table of every Sylius database, far under its threshold, so the growth probe reads the real catalogue.
+        table_growth:
+            sylius_channel: 1000000
 
 framework:
     translator:
