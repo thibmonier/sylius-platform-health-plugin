@@ -34,7 +34,16 @@ final readonly class HeartbeatRecorder implements EventSubscriberInterface
 
     public function onTerminate(ConsoleTerminateEvent $event): void
     {
-        // Red stub (T-296-01): records nothing yet; the green commit (T-296-03) replaces it.
-        $this->logger->debug('Heartbeat recorder stub.', ['command' => $event->getCommand()?->getName(), 'declared' => \count($this->commands), 'at' => $this->clock->now()->format('c'), 'store' => $this->store::class]);
+        $command = $event->getCommand()?->getName();
+        if (null === $command || !\in_array($command, $this->commands, true)) {
+            return;
+        }
+
+        try {
+            $this->store->record($command, $event->getExitCode(), $this->clock->now());
+        } catch (\Throwable $exception) {
+            // The heartbeat must never break the command it watches: logged, and the exit code stays the command's own.
+            $this->logger->error('The heartbeat of "{command}" could not be recorded.', ['command' => $command, 'exception' => $exception]);
+        }
     }
 }
