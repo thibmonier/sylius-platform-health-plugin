@@ -9,6 +9,7 @@ use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Component\Translation\Translator;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\RecordingLogger;
+use Tmonier\SyliusPlatformHealthPlugin\Security\SafeText;
 use Tmonier\SyliusPlatformHealthPlugin\Security\SensitiveValueMasker;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\SafeTextExtension;
 
@@ -61,6 +62,6 @@ final class SafeTextExtensionTest extends TestCase
         $translator->addLoader('array', new ArrayLoader());
         $translator->addResource('array', ['tmonier_platform_health.result.detail_hidden' => 'The detail was hidden: see the application log.'], 'en');
 
-        return new SafeTextExtension($translator, new SensitiveValueMasker('/var/www/shop'), $this->logger);
+        return new SafeTextExtension(new SafeText($translator, new SensitiveValueMasker('/var/www/shop'), $this->logger));
     }
 }

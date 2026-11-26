@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusPlatformHealthPlugin\Twig;
 
-use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatableInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Tmonier\SyliusPlatformHealthPlugin\Security\SensitiveValueMasker;
+use Tmonier\SyliusPlatformHealthPlugin\Security\SafeText;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -17,9 +15,7 @@ use Twig\TwigFunction;
 final class SafeTextExtension extends AbstractExtension
 {
     public function __construct(
-        private readonly TranslatorInterface $translator,
-        private readonly SensitiveValueMasker $masker,
-        private readonly LoggerInterface $logger,
+        private readonly SafeText $safeText,
     ) {
     }
 
@@ -30,15 +26,6 @@ final class SafeTextExtension extends AbstractExtension
 
     public function text(TranslatableInterface $text, string $identifier): string
     {
-        $raw = $text->trans($this->translator);
-
-        if ($this->masker->looksLikeExecutionTrace($raw)) {
-            // The probe is at fault, not the administrator: the log names it, and never carries the trace.
-            $this->logger->warning('Health check "{identifier}" returned an execution trace: hidden from the page.', ['identifier' => $identifier]);
-
-            return $this->translator->trans('tmonier_platform_health.result.detail_hidden');
-        }
-
-        return $this->masker->mask($raw);
+        return $this->safeText->render($text, $identifier);
     }
 }
