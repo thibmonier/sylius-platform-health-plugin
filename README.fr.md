@@ -9,7 +9,7 @@
 
 ## État
 
-Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, huit sondes d'environnement, sept sondes de données et un battement des tâches planifiées** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug, cache de l'application, dossiers inscriptibles ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables, files Messenger, âge du plus ancien message, messages en échec ; commandes cron déclarées qui ne réussissent plus), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
+Le plugin livre le **contrat, l'exécuteur, la page d'administration, un encart du tableau de bord, huit sondes d'environnement, sept sondes de données et un battement des tâches planifiées et une commande console (`tmonier:health:check`)** (versions et fin de support de PHP, Symfony et Sylius, extensions PHP, OPcache, mode debug, cache de l'application, dossiers inscriptibles ; connexion à la base, migrations en attente, dérive du schéma, croissance des tables, files Messenger, âge du plus ancien message, messages en échec ; commandes cron déclarées qui ne réussissent plus), ainsi qu'un rôle d'accès dédié et facultatif (`ROLE_PLATFORM_HEALTH_VIEW`). Les captures ci-dessous viennent de l'application de test : sa page liste aussi cinq sondes de démonstration qui vivent dans `tests/`, pas dans le paquet. Langues : français et anglais.
 
 ## La page d'administration
 
@@ -193,6 +193,58 @@ Le rythme se déclare en configuration, jamais par un attribut sur la commande :
 | table illisible (migration non lancée) | `unknown`, la cause au journal seulement |
 
 La sonde prend la pire commande comme synthèse et donne une ligne par commande déclarée dans le détail. Elle ne fait que lire : aucune écriture pendant le rendu de la page. Le nom de la commande est affiché, jamais ses arguments ni sa sortie.
+
+## La commande console
+
+`php bin/console tmonier:health:check` lance les sondes depuis un shell, sans ouvrir l'administration. Elle passe par le même exécuteur que la page (même budget de temps par sonde, même masquage de ce qui est sensible) et **ne lit jamais le cache partagé avec la page** : un diagnostic en console est frais. Elle n'écrit rien.
+
+```bash
+php bin/console tmonier:health:check                                        # texte, regroupé par catégorie
+php bin/console tmonier:health:check --format=json                          # JSON pour un script
+php bin/console tmonier:health:check --category=data --category=shop        # répétable
+php bin/console tmonier:health:check --only=data.connection --only=data.schema_drift
+```
+
+La sortie texte compte une ligne par sonde (statut écrit en toutes lettres, identifiant, résumé) sous le titre de sa catégorie, puis une ligne de synthèse. Les textes sont dans la locale par défaut de l'application. La sortie JSON est `{"status": "...", "generated_at": "...", "checks": [{"identifier", "category", "status", "summary"}]}` : valeurs brutes (`ok`, `warning`, `critical`, `unknown` ; `environment`, `data`, `scheduled_tasks`, `shop`, `plugins`), sans détail ni lien.
+
+### Codes de sortie
+
+Le code se calcule sur les sondes retenues par les filtres.
+
+| Sondes retenues | Code |
+|---|---|
+| toutes `ok` | **0** |
+| au moins une `warning`, aucune `critical` | **1** |
+| au moins une `unknown`, aucune `critical` (une sonde qui ne mesure pas ne passe pas une porte de CI en silence) | **1** |
+| au moins une `critical`, quelles que soient les autres | **2** |
+| option invalide : `--category` inconnue, `--only` qui ne désigne aucune sonde, `--format` inconnu | **3**, avec un message qui nomme la valeur refusée |
+| aucune sonde après des filtres valides (catégorie connue mais sans sonde) | **0**, avec le message « Aucune sonde ne correspond à la sélection. » |
+
+Le 3 est distinct du 2 à dessein : une faute de frappe dans un job de CI ne doit pas se lire comme « critique ». Une sonde qui lève une exception est `unknown` (donc 1) : l'exception va au journal de l'application, jamais à la sortie.
+
+### Comme porte de CI après un déploiement
+
+```bash
+# tout code non nul fait échouer le job ; le 1 (warning, unknown) peut être toléré explicitement
+php bin/console tmonier:health:check --format=json > health.json || [ $? -eq 1 ]
+```
+
+Pour n'échouer que sur `critical`, tolérer le 1 comme ci-dessus. Pour échouer sur tout ce qui n'est pas `ok`, retirer le `|| [ $? -eq 1 ]`.
+
+### Dans un cron
+
+```cron
+*/15 * * * * cd /var/www/shop && php bin/console tmonier:health:check --category=data --category=scheduled_tasks > /dev/null || echo "Santé de la plateforme : code $?" | mail -s "Santé de la plateforme" ops@example.com
+```
+
+### Depuis la console de l'hébergeur
+
+Sur un hébergeur qui ne donne qu'un shell, par exemple Railway :
+
+```bash
+railway ssh
+php bin/console tmonier:health:check
+```
 
 ## Le contrat
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Symfony\Component\HttpKernel\Kernel;
+use Tmonier\SyliusPlatformHealthPlugin\Console\HealthCheckCommand;
 use Tmonier\SyliusPlatformHealthPlugin\Data\ConnectionCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Data\DbalConnectionPinger;
 use Tmonier\SyliusPlatformHealthPlugin\Data\DbalTableRowEstimator;
@@ -36,6 +37,7 @@ use Tmonier\SyliusPlatformHealthPlugin\Health\HealthSnapshotProvider;
 use Tmonier\SyliusPlatformHealthPlugin\Menu\AdminMenuListener;
 use Tmonier\SyliusPlatformHealthPlugin\Controller\HealthPageController;
 use Tmonier\SyliusPlatformHealthPlugin\Security\PlatformHealthVoter;
+use Tmonier\SyliusPlatformHealthPlugin\Security\SafeText;
 use Tmonier\SyliusPlatformHealthPlugin\Security\SensitiveValueMasker;
 use Tmonier\SyliusPlatformHealthPlugin\Summary\HealthSummaryBuilder;
 use Tmonier\SyliusPlatformHealthPlugin\Twig\ActionUrlExtension;
@@ -71,6 +73,16 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
         ])
     ;
 
+    $services->set('tmonier_sylius_platform_health.console.check', HealthCheckCommand::class)
+        ->args([
+            service('tmonier_sylius_platform_health.runner'),
+            service('translator'),
+            service('tmonier_sylius_platform_health.security.safe_text'),
+            service('clock'),
+        ])
+        ->tag('console.command')
+    ;
+
     $services->set('tmonier_sylius_platform_health.summary_builder', HealthSummaryBuilder::class);
 
     $services->set('tmonier_sylius_platform_health.twig.component.health', HealthComponent::class)
@@ -101,12 +113,16 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
         ->tag('twig.extension')
     ;
 
-    $services->set('tmonier_sylius_platform_health.twig.safe_text', SafeTextExtension::class)
+    $services->set('tmonier_sylius_platform_health.security.safe_text', SafeText::class)
         ->args([
             service('translator'),
             service('tmonier_sylius_platform_health.security.masker'),
             service('logger'),
         ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.twig.safe_text', SafeTextExtension::class)
+        ->args([service('tmonier_sylius_platform_health.security.safe_text')])
         ->tag('twig.extension')
     ;
 
