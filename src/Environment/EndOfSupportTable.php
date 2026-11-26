@@ -23,12 +23,12 @@ final class EndOfSupportTable
         '8.3' => '2027-12-31',
         '8.4' => '2028-12-31',
         '8.5' => '2029-12-31',
+        '8.6' => '2030-12-31',
     ];
 
     /**
      * End of security support of each Sylius minor branch (https://docs.sylius.com/public/open-source/release-cycle).
-     * 2.2: March 2027, as published. 2.3: no date published yet; estimated from 2.2 (end of support 15 months after
-     * the release), to be replaced by the official date at the next renewal of the table.
+     * 2.2: March 2027, 2.3: December 2027, as published (reviewed on 2026-11-26 for v0.4.0).
      */
     private const SYLIUS_SUPPORT_END = [
         '2.2' => '2027-03-31',
