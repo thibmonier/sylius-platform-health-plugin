@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - Probes provided by another plugin, the health plugin staying optional for it (US-303): the plugin declares the health plugin in `suggest` and `require-dev` (never `require`), keeps its probes in a services file of their own (`config/health_checks.php`) and its extension loads that file only when `HealthCheckInterface` exists, through an injectable `\Closure` check (`interface_exists(...)` by default). README (English and French) section with a complete example; a demonstration plugin in `tests/Fixture/DemoWebhooks` and a kernel without the health plugin in the test application. A category without any probe is hidden on the page and in the dashboard panel (already the behaviour of the summary builder, now covered by tests).
 
 ### Fixed
-- The `data.schema_drift` probe no longer counts the table where Doctrine Migrations records the executed versions (`sylius_migrations` in Sylius) as a table to drop (US-318). `doctrine:schema:update` hides that table only while it runs; on the page, outside any command, the probe read it as drift and could never be `ok`. The reader hides it the same way for the time of the comparison, then restores the schema filter of the connection.
+- The `data.schema_drift` probe no longer counts the table where Doctrine Migrations records the executed versions (`sylius_migrations` in Sylius) as a table to drop (US-318). `doctrine:schema:update` hides that table only while it runs; on the page, outside any command, the probe read it as drift and could never be `ok`. The reader no longer counts that single `DROP TABLE` statement; the schema filter of the connection is left untouched.
 
 ## [0.4.0] - 2026-11-26
 

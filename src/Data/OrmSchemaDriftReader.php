@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusPlatformHealthPlugin\Data;
 
-use Doctrine\DBAL\Schema\AbstractAsset;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Metadata\Storage\TableMetadataStorageConfiguration;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,9 +12,9 @@ use Doctrine\ORM\Tools\SchemaTool;
 /**
  * Counts what `doctrine:schema:update --dump-sql` would print; the statements themselves never leave this class.
  *
- * That command hides the table where Doctrine Migrations records the executed versions (DoctrineMigrationsBundle
- * filters it during doctrine:schema:* only); outside any command it would read as a table to drop, so the reader
- * hides it the same way for the time of the comparison, then puts the filter of the connection back.
+ * That command never drops the table where Doctrine Migrations records the executed versions: DoctrineMigrationsBundle
+ * hides it during doctrine:schema:* only. Outside any command the comparison reads it as a table to drop, so that one
+ * statement is not counted. The schema filter of the connection is left untouched (its type differs between DBAL 3 and 4).
  */
 final readonly class OrmSchemaDriftReader implements SchemaDriftReaderInterface
 {
@@ -32,18 +31,15 @@ final readonly class OrmSchemaDriftReader implements SchemaDriftReaderInterface
         }
 
         $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
-        $configuration = $this->entityManager->getConnection()->getConfiguration();
-        $filter = $configuration->getSchemaAssetsFilter();
-        $hidden = $this->migrationsTable();
-        if (null !== $hidden) {
-            $configuration->setSchemaAssetsFilter(static fn (string|AbstractAsset $asset): bool => ($asset instanceof AbstractAsset ? $asset->getName() : $asset) !== $hidden && $filter($asset));
+        $statements = (new SchemaTool($this->entityManager))->getUpdateSchemaSql($metadata);
+        $table = $this->migrationsTable();
+        if (null === $table) {
+            return \count($statements);
         }
 
-        try {
-            return \count((new SchemaTool($this->entityManager))->getUpdateSchemaSql($metadata));
-        } finally {
-            $configuration->setSchemaAssetsFilter($filter);
-        }
+        $dropOfTheTable = '/^DROP TABLE [`"]?' . preg_quote($table, '/') . '[`"]?$/i';
+
+        return \count(array_filter($statements, static fn (string $sql): bool => 1 !== preg_match($dropOfTheTable, $sql)));
     }
 
     private function migrationsTable(): ?string
