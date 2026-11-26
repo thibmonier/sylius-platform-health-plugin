@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 - Screenshots of the dashboard panel in the README, English and French, light and dark theme, taken on the B2B demo (US-289).
+- Four data probes (US-294), registered by the plugin: `data.connection` (the default Doctrine connection answers, `warning` beyond `data.connection_warning_ms`, 500 ms by default; `critical` when it does not, the cause logged and never displayed), `data.pending_migrations` (`critical` from one pending Doctrine migration), `data.schema_drift` (number of statements between the mapping and the database, never their SQL) and `data.table_growth` (estimated rows of the tables declared under `data.table_growth`, read from the MySQL, MariaDB or PostgreSQL catalogue, never a `COUNT(*)`; `critical` beyond the double of the threshold). Read-only. English and French translations (`tmonier_platform_health.data.*`).
 
 ## [0.3.0] - 2026-11-25
 
