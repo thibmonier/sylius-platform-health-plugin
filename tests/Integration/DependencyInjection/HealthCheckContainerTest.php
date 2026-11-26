@@ -47,10 +47,10 @@ final class HealthCheckContainerTest extends TestCase
         );
     }
 
-    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheFifteenChecksOfThePlugin(): void
+    public function testAProjectWithoutAnyCheckOfItsOwnGetsOnlyTheSixteenChecksOfThePlugin(): void
     {
         self::assertSame([], $this->applicationReports($this->container()));
-        self::assertCount(15, $this->runner($this->container())->run());
+        self::assertCount(16, $this->runner($this->container())->run());
     }
 
     public function testTwoChecksWithTheSameIdentifierFailTheCompilationNamingTheIdentifierAndBothClasses(): void
@@ -126,7 +126,7 @@ final class HealthCheckContainerTest extends TestCase
     }
 
     /**
-     * @return list<HealthCheckReport> the reports of the checks of the application, without the fifteen of the plugin
+     * @return list<HealthCheckReport> the reports of the checks of the application, without the sixteen of the plugin
      */
     private function applicationReports(ContainerBuilder $container): array
     {

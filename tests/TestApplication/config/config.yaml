@@ -2,6 +2,10 @@ imports:
     - { resource: "services.php" }
 
 tmonier_sylius_platform_health:
+    scheduled_tasks:
+        # US-296: the test command of the heartbeat, on a daily rhythm so that a run of the suite keeps it on time.
+        heartbeats:
+            'tmonier:platform-health:test-beat': '1d'
     data:
         # US-294: a table of every Sylius database, far under its threshold, so the growth probe reads the real catalogue.
         table_growth:

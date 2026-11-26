@@ -50,6 +50,42 @@ final class ConfigurationTest extends TestCase
         self::assertSame([], $data['table_growth']);
     }
 
+    public function testNoCommandIsWatchedByDefault(): void
+    {
+        self::assertSame(['heartbeats' => [], 'warning_beats' => 2, 'critical_beats' => 4], $this->process([])['scheduled_tasks']);
+    }
+
+    public function testDeclaredCommandsKeepTheirExactNameAndRhythm(): void
+    {
+        $heartbeats = ['tmonier:feeds:generate' => '15m', 'app:demo-reset' => '1d', 'sylius:remove-expired-carts' => '1h'];
+
+        self::assertSame($heartbeats, $this->process(['scheduled_tasks' => ['heartbeats' => $heartbeats]])['scheduled_tasks']['heartbeats']);
+    }
+
+    public function testARhythmThatIsNotAPositiveDurationIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/positive duration/');
+
+        $this->process(['scheduled_tasks' => ['heartbeats' => ['tmonier:feeds:generate' => '15 minutes']]]);
+    }
+
+    public function testAnEmptyOrInvalidCommandNameIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/console command name/');
+
+        $this->process(['scheduled_tasks' => ['heartbeats' => [' feeds; rm -rf' => '15m']]]);
+    }
+
+    public function testTheCriticalBeatsMustBeAboveTheWarningBeats(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/critical_beats/');
+
+        $this->process(['scheduled_tasks' => ['warning_beats' => 3, 'critical_beats' => 3]]);
+    }
+
     public function testTheQueueProbesHaveOpinionatedDefaults(): void
     {
         self::assertSame(
@@ -97,11 +133,11 @@ final class ConfigurationTest extends TestCase
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}}
+     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}}
      */
     private function process(array $config): array
     {
-        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}} $processed */
+        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}} $processed */
         $processed = (new Processor())->processConfiguration(new Configuration(), [$config]);
 
         return $processed;

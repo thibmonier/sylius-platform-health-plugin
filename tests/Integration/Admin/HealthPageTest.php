@@ -58,7 +58,7 @@ final class HealthPageTest extends WebTestCase
         $results = $this->deferredResults($this->client->request('GET', self::PAGE));
 
         self::assertSame(self::FIVE_PROBES, ProbeExecutions::count());
-        self::assertCount(4, $results->filter('[data-test-health-category]'));
+        self::assertCount(5, $results->filter('[data-test-health-category]'));
     }
 
     public function testCategoriesAreOrderedMostSevereFirstEachWithItsWorstStatus(): void
@@ -68,7 +68,7 @@ final class HealthPageTest extends WebTestCase
         $results = $this->deferredResults($this->client->request('GET', self::PAGE));
 
         self::assertSame(
-            ['shop:critical', 'environment:warning', 'data:warning', 'plugins:unknown'],
+            ['shop:critical', 'environment:warning', 'data:warning', 'scheduled_tasks:unknown', 'plugins:unknown'],
             $results->filter('[data-test-health-category]')->each(static fn (Crawler $category): string => $category->attr('data-test-health-category') . ':' . $category->attr('data-test-health-status')),
         );
     }
@@ -122,7 +122,7 @@ final class HealthPageTest extends WebTestCase
         $results = $this->deferredResults($secondAdmin->request('GET', self::PAGE));
 
         self::assertSame(self::FIVE_PROBES, ProbeExecutions::count());
-        self::assertCount(4, $results->filter('[data-test-health-category]'));
+        self::assertCount(5, $results->filter('[data-test-health-category]'));
     }
 
     public function testTheRefreshActionRunsTheChecksAgainAndReplacesTheCache(): void
