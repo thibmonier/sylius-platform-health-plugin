@@ -7,6 +7,7 @@ namespace Tmonier\SyliusPlatformHealthPlugin\Data;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Translation\TranslatableMessage;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\DocumentationLink;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
@@ -33,13 +34,30 @@ final readonly class ConnectionCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        // Red stub (T-294-01): reads its collaborators and answers nothing yet; the green commit replaces it.
+        $start = $this->clock->now();
+
         try {
             $this->pinger->ping();
-        } catch (\Throwable) {
-        }
-        $this->logger->debug('Stub.', ['now' => $this->clock->now(), 'threshold_ms' => $this->warningMs]);
+        } catch (\Throwable $exception) {
+            // The message of a driver exception may carry the DSN, the host or the user: the log only, never the screen.
+            $this->logger->error('The database did not answer the health check.', ['exception' => $exception]);
 
-        return HealthResult::unknown(new TranslatableMessage('tmonier_platform_health.result.check_failed'));
+            return HealthResult::critical(new TranslatableMessage('tmonier_platform_health.data.connection.unreachable'), null, DocumentationLink::create());
+        }
+
+        $durationMs = $this->elapsedMs($start);
+        if ($durationMs > $this->warningMs) {
+            return HealthResult::warning(new TranslatableMessage('tmonier_platform_health.data.connection.slow', ['%duration_ms%' => $durationMs, '%threshold_ms%' => $this->warningMs]), null, DocumentationLink::create());
+        }
+
+        return HealthResult::ok(new TranslatableMessage('tmonier_platform_health.data.connection.ok', ['%duration_ms%' => $durationMs]));
+    }
+
+    private function elapsedMs(\DateTimeImmutable $start): int
+    {
+        $now = $this->clock->now();
+        $microseconds = ((int) $now->format('U') - (int) $start->format('U')) * 1_000_000 + (int) $now->format('u') - (int) $start->format('u');
+
+        return intdiv($microseconds, 1000);
     }
 }

@@ -8,11 +8,12 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Logging\Middleware;
+use Doctrine\Migrations\DependencyFactory;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\RecordingLogger;
 use Tmonier\SyliusPlatformHealthPlugin\Data\ConnectionPingerInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Data\DbalTableRowEstimator;
-use Tmonier\SyliusPlatformHealthPlugin\Data\MigrationStatusReaderInterface;
+use Tmonier\SyliusPlatformHealthPlugin\Data\DoctrineMigrationStatusReader;
 use Tmonier\SyliusPlatformHealthPlugin\Data\SchemaDriftReaderInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Data\TableRowEstimatorInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
@@ -76,9 +77,9 @@ final class DataChecksTest extends KernelTestCase
 
         $pinger = $container->get('tmonier_sylius_platform_health.test.data.connection_pinger');
         self::assertInstanceOf(ConnectionPingerInterface::class, $pinger);
-        $migrations = $container->get('tmonier_sylius_platform_health.test.data.migration_status_reader');
-        self::assertInstanceOf(MigrationStatusReaderInterface::class, $migrations);
-        self::assertNotNull($migrations->read(), 'The test application has Doctrine migrations.');
+        $factory = $container->get('tmonier_sylius_platform_health.test.migrations_dependency_factory');
+        self::assertInstanceOf(DependencyFactory::class, $factory);
+        self::assertNotNull((new DoctrineMigrationStatusReader($factory))->read(), 'The test application has Doctrine migrations.');
         $drift = $container->get('tmonier_sylius_platform_health.test.data.schema_drift_reader');
         self::assertInstanceOf(SchemaDriftReaderInterface::class, $drift);
         self::assertNotNull($drift->countStatements(), 'The test application has a Doctrine ORM.');

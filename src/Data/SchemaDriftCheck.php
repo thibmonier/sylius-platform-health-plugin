@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusPlatformHealthPlugin\Data;
 
 use Symfony\Component\Translation\TranslatableMessage;
+use Tmonier\SyliusPlatformHealthPlugin\Environment\DocumentationLink;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCategory;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthResult;
@@ -28,9 +29,14 @@ final readonly class SchemaDriftCheck implements HealthCheckInterface
 
     public function run(): HealthResult
     {
-        // Red stub (T-294-01): reads its collaborators and answers nothing yet; the green commit replaces it.
-        $this->reader->countStatements();
+        $statements = $this->reader->countStatements();
+        if (null === $statements) {
+            return HealthResult::unknown(new TranslatableMessage('tmonier_platform_health.data.schema_drift.not_available'));
+        }
+        if ($statements > 0) {
+            return HealthResult::warning(new TranslatableMessage('tmonier_platform_health.data.schema_drift.drift', ['%count%' => $statements]), null, DocumentationLink::create());
+        }
 
-        return HealthResult::unknown(new TranslatableMessage('tmonier_platform_health.result.check_failed'));
+        return HealthResult::ok(new TranslatableMessage('tmonier_platform_health.data.schema_drift.ok'));
     }
 }

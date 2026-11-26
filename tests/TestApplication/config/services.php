@@ -6,6 +6,7 @@ use Symfony\Component\Clock\MockClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\FixedMigrationStatusReader;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoDataCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoEnvironmentCheck;
 use Tests\Tmonier\SyliusPlatformHealthPlugin\Support\Fixture\DemoShopCheck;
@@ -49,10 +50,15 @@ return static function (ContainerConfigurator $container): void {
         ])
     ;
 
+    // The test database is built from the mapping, not from the migrations: every Sylius migration would read as pending and
+    // turn the data category critical on every page test. The real reader is tested on its own (DataChecksTest).
+    $services->set('tmonier_sylius_platform_health.data.migration_status_reader', FixedMigrationStatusReader::class);
+
     $services->alias('tmonier_sylius_platform_health.test.runner', 'tmonier_sylius_platform_health.runner')->public();
 
     // US-294: the readers of the data probes, reached by the integration tests against the database of the test application.
-    foreach (['connection_pinger', 'migration_status_reader', 'schema_drift_reader', 'table_row_estimator'] as $reader) {
+    foreach (['connection_pinger', 'schema_drift_reader', 'table_row_estimator'] as $reader) {
         $services->alias('tmonier_sylius_platform_health.test.data.' . $reader, 'tmonier_sylius_platform_health.data.' . $reader)->public();
     }
+    $services->alias('tmonier_sylius_platform_health.test.migrations_dependency_factory', 'doctrine.migrations.dependency_factory')->public();
 };
