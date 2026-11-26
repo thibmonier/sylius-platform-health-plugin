@@ -223,7 +223,10 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
     ;
 
     $services->set('tmonier_sylius_platform_health.data.schema_drift_reader', OrmSchemaDriftReader::class)
-        ->args([service('doctrine.orm.default_entity_manager')->nullOnInvalid()])
+        ->args([
+            service('doctrine.orm.default_entity_manager')->nullOnInvalid(),
+            service('doctrine.migrations.dependency_factory')->nullOnInvalid(),
+        ])
     ;
 
     $services->set('tmonier_sylius_platform_health.data.schema_drift', SchemaDriftCheck::class)
