@@ -9,7 +9,7 @@
 
 ## Status
 
-The plugin ships the **contract, the runner, the administration page, a dashboard panel, eight environment probes, seven data probes and a heartbeat of the scheduled tasks** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode, application cache, writable directories; database connection, pending migrations, schema drift, table growth, Messenger queues, age of the oldest message, failed messages; declared cron commands that no longer succeed), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
+The plugin ships the **contract, the runner, the administration page, a dashboard panel, eight environment probes, seven data probes and a heartbeat of the scheduled tasks and a console command (`tmonier:health:check`)** (PHP, Symfony and Sylius versions and end of support, PHP extensions, OPcache, debug mode, application cache, writable directories; database connection, pending migrations, schema drift, table growth, Messenger queues, age of the oldest message, failed messages; declared cron commands that no longer succeed), plus a dedicated, optional access role (`ROLE_PLATFORM_HEALTH_VIEW`). The screenshots below come from the test application: its page also lists five demonstration probes that live in `tests/`, not in the package. Languages: English and French.
 
 ## The administration page
 
@@ -193,6 +193,58 @@ The rhythm is declared in configuration, never by an attribute on the command, s
 | table unreadable (migration not run) | `unknown`, the cause in the log only |
 
 The probe reads the worst command as its summary and gives one line per declared command in the detail. It only reads: it never writes during the rendering of the page. The name of the command is shown, never its arguments nor its output.
+
+## The console command
+
+`php bin/console tmonier:health:check` runs the probes from a shell, without opening the administration. It goes through the same runner as the page (same time budget per probe, same masking of what is sensitive) and **never reads the cache shared with the page**: a diagnostic in a console is fresh. It writes nothing.
+
+```bash
+php bin/console tmonier:health:check                                        # text, grouped by category
+php bin/console tmonier:health:check --format=json                          # JSON for a script
+php bin/console tmonier:health:check --category=data --category=shop        # repeatable
+php bin/console tmonier:health:check --only=data.connection --only=data.schema_drift
+```
+
+The text output has one line per probe (status spelled out, identifier, summary) under the heading of its category, then a summary line. The texts are in the default locale of the application. The JSON output is `{"status": "...", "generated_at": "...", "checks": [{"identifier", "category", "status", "summary"}]}`: raw values (`ok`, `warning`, `critical`, `unknown`; `environment`, `data`, `scheduled_tasks`, `shop`, `plugins`), no detail and no link.
+
+### Exit codes
+
+The code is computed on the probes retained by the filters.
+
+| Retained probes | Code |
+|---|---|
+| all `ok` | **0** |
+| at least one `warning`, no `critical` | **1** |
+| at least one `unknown`, no `critical` (a probe that does not measure does not pass a CI gate in silence) | **1** |
+| at least one `critical`, whatever the others | **2** |
+| invalid option: unknown `--category`, `--only` that designates no probe, unknown `--format` | **3**, with a message that names the refused value |
+| no probe after valid filters (a known category without any probe) | **0**, with the message "No probe matches the selection." |
+
+3 is distinct from 2 on purpose: a typo in a CI job must not read as "critical". A probe that throws is `unknown` (so 1): the exception goes to the application log, never to the output.
+
+### As a gate in CI after a deployment
+
+```bash
+# any non-zero code fails the job; 1 (warning, unknown) can be tolerated explicitly
+php bin/console tmonier:health:check --format=json > health.json || [ $? -eq 1 ]
+```
+
+To fail only on `critical`, tolerate 1 as above. To fail on anything that is not `ok`, drop the `|| [ $? -eq 1 ]`.
+
+### As a cron
+
+```cron
+*/15 * * * * cd /var/www/shop && php bin/console tmonier:health:check --category=data --category=scheduled_tasks > /dev/null || echo "Platform health: code $?" | mail -s "Platform health" ops@example.com
+```
+
+### From the console of the host
+
+On a host that only gives you a shell, for example Railway:
+
+```bash
+railway ssh
+php bin/console tmonier:health:check
+```
 
 ## The contract
 
