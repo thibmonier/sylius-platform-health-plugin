@@ -17,12 +17,8 @@ final class TranslationRules
     private const STALE = ['ne fournit aucun', 'ships no'];
 
     /**
-     * The console has no page: it speaks of probes ("sondes"), the word of the documentation and of the command.
-     */
-    private const CONSOLE_PREFIX = 'tmonier_platform_health.console.';
-
-    /**
-     * The vocabulary of the page is "check" / "contrôle"; "probe" and "sonde" name the concept in the documentation.
+     * The vocabulary of the page and of the console is "check" / "contrôle"; "probe" and "sonde" name the concept in the
+     * documentation only (decision of Thibaut, 2026-11-26).
      */
     private const VOCABULARY = ['en' => 'probe', 'fr' => 'sonde'];
 
@@ -115,7 +111,7 @@ final class TranslationRules
                 $problems[] = sprintf('stale wording "%s"', $phrase);
             }
         }
-        if (!str_starts_with($key, self::CONSOLE_PREFIX) && str_contains($lowered, self::VOCABULARY[$locale])) {
+        if (str_contains($lowered, self::VOCABULARY[$locale])) {
             $problems[] = sprintf('says "%s" where the page says "%s"', self::VOCABULARY[$locale], 'en' === $locale ? 'check' : 'contrôle');
         }
         if (str_contains($text, '...')) {

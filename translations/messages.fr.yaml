@@ -92,10 +92,10 @@ tmonier_platform_health:
         critical: Critique
         unknown: Non mesurable
     console:
-        empty: 'Aucune sonde ne correspond à la sélection.'
-        summary: 'Statut global : %status% (%total% sondes : %critical% critique, %warning% avertissement, %unknown% non mesurable, %ok% OK).'
+        empty: 'Aucun contrôle ne correspond à la sélection.'
+        summary: 'Statut global : %status% (%total% contrôles : %critical% critique, %warning% avertissement, %unknown% non mesurable, %ok% OK).'
         invalid_choice: 'Valeur "%value%" refusée pour %option%. Valeurs acceptées : %allowed%.'
-        invalid_only: 'Aucune sonde n''a l''identifiant "%value%".'
+        invalid_only: 'Aucun contrôle n''a l''identifiant "%value%".'
     ui:
         menu: Santé de la plateforme
         title: Santé de la plateforme

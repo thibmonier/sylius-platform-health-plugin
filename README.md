@@ -218,7 +218,7 @@ The code is computed on the probes retained by the filters.
 | at least one `unknown`, no `critical` (a probe that does not measure does not pass a CI gate in silence) | **1** |
 | at least one `critical`, whatever the others | **2** |
 | invalid option: unknown `--category`, `--only` that designates no probe, unknown `--format` | **3**, with a message that names the refused value |
-| no probe after valid filters (a known category without any probe) | **0**, with the message "No probe matches the selection." |
+| no probe after valid filters (a known category without any probe) | **0**, with the message "No check matches the selection." |
 
 3 is distinct from 2 on purpose: a typo in a CI job must not read as "critical". A probe that throws is `unknown` (so 1): the exception goes to the application log, never to the output.
 

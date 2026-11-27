@@ -92,10 +92,10 @@ tmonier_platform_health:
         critical: Critical
         unknown: Not measurable
     console:
-        empty: 'No probe matches the selection.'
-        summary: 'Overall status: %status% (%total% probes: %critical% critical, %warning% warning, %unknown% not measurable, %ok% OK).'
+        empty: 'No check matches the selection.'
+        summary: 'Overall status: %status% (%total% checks: %critical% critical, %warning% warning, %unknown% not measurable, %ok% OK).'
         invalid_choice: 'Value "%value%" refused for %option%. Accepted values: %allowed%.'
-        invalid_only: 'No probe has the identifier "%value%".'
+        invalid_only: 'No check has the identifier "%value%".'
     ui:
         menu: Platform health
         title: Platform health
