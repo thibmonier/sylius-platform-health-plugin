@@ -34,6 +34,9 @@ use Tmonier\SyliusPlatformHealthPlugin\Environment\SymfonyVersionCheck;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckRunner;
 use Tmonier\SyliusPlatformHealthPlugin\Health\HealthSnapshotProvider;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\CacheStorage;
+use Tmonier\SyliusPlatformHealthPlugin\Http\HealthEndpointController;
 use Tmonier\SyliusPlatformHealthPlugin\Menu\AdminMenuListener;
 use Tmonier\SyliusPlatformHealthPlugin\Controller\HealthPageController;
 use Tmonier\SyliusPlatformHealthPlugin\Security\PlatformHealthVoter;
@@ -137,6 +140,34 @@ return static function (Symfony\Component\DependencyInjection\Loader\Configurato
 
     $services->set('tmonier_sylius_platform_health.controller.page', HealthPageController::class)
         ->args([service('twig')])
+        ->tag('controller.service_arguments')
+    ;
+
+    // US-308: the public entry point. The limiter counts in the application cache (shared between the workers of a host).
+    $services->set('tmonier_sylius_platform_health.http.rate_limiter_storage', CacheStorage::class)
+        ->args([service('cache.app')])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.http.rate_limiter', RateLimiterFactory::class)
+        ->args([
+            [
+                'id' => 'tmonier_platform_health_http',
+                'policy' => 'fixed_window',
+                'limit' => param('tmonier_sylius_platform_health.http.rate_limit'),
+                'interval' => '1 minute',
+            ],
+            service('tmonier_sylius_platform_health.http.rate_limiter_storage'),
+        ])
+    ;
+
+    $services->set('tmonier_sylius_platform_health.controller.http', HealthEndpointController::class)
+        ->args([
+            service('tmonier_sylius_platform_health.snapshot_provider'),
+            service('tmonier_sylius_platform_health.http.rate_limiter'),
+            param('tmonier_sylius_platform_health.http.token'),
+            param('tmonier_sylius_platform_health.http.detail_token'),
+            param('tmonier_sylius_platform_health.http.liveness'),
+        ])
         ->tag('controller.service_arguments')
     ;
 
