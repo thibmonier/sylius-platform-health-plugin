@@ -246,6 +246,63 @@ railway ssh
 php bin/console tmonier:health:check
 ```
 
+## Exposer la santé en HTTP
+
+Un point d'entrée public, `GET /health`, pour un outil de supervision ou le contrôle de santé d'un hébergeur. Il est **inactif tant qu'aucun jeton n'est configuré** (toute requête répond 404, comme une page absente) et il lit le résultat partagé avec la page (`cache_ttl`) : il ne lance jamais les sondes de lui-même.
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    http:
+        token: '%env(PLATFORM_HEALTH_TOKEN)%'            # niveau global
+        detail_token: '%env(PLATFORM_HEALTH_DETAIL_TOKEN)%'  # niveau détail (facultatif, différent de token)
+        liveness: false                                  # voir plus bas (défaut : false)
+        rate_limit: 30                                   # requêtes par minute et par adresse IP (défaut : 30)
+```
+
+```yaml
+# config/routes/tmonier_sylius_platform_health.yaml (les routes du plugin importent déjà /health)
+tmonier_sylius_platform_health:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
+```
+
+Pour servir ailleurs que sur `/health`, importez vous-même `config/routes/admin.yaml` (avec le préfixe de l'administration) et `config/routes/http.yaml` (avec votre préfixe) au lieu de `config/routes.yaml`.
+
+| Requête | Réponse |
+|---------|---------|
+| aucun jeton configuré | 404 |
+| sans en-tête, `liveness: false` | 404 |
+| sans en-tête, `liveness: true` | 200 (aucune sonde `critical`) ou 503, corps vide |
+| jeton faux, ou jeton dans l'URL | 404 |
+| `Authorization: Bearer <token>` | 200 ou 503, `{"status", "generated_at"}` |
+| `Authorization: Bearer <detail_token>` | 200 ou 503, plus `checks` (`identifier`, `category`, `status` de chaque sonde) |
+| plus de `rate_limit` requêtes dans la minute depuis une IP | 429, rien n'est mesuré |
+
+503 seulement si au moins une sonde est `critical` : un `warning` ou un `unknown` répond 200, le statut du corps les distingue.
+
+```bash
+curl -H "Authorization: Bearer $PLATFORM_HEALTH_TOKEN" https://boutique.example.com/health
+```
+
+### Sécurité
+
+- Le jeton voyage dans l'en-tête `Authorization`, jamais dans l'URL (une URL finit dans les journaux et les référents), et se compare avec `hash_equals`. Utilisez des valeurs longues et aléatoires (`openssl rand -hex 32`) venant de l'environnement, jamais d'un fichier versionné.
+- Une requête sans jeton valide reçoit le même 404 que n'importe quelle page absente : le point d'entrée ne révèle pas qu'il existe.
+- Les réponses ne portent jamais de résumé, de détail, de lien, de version, de chemin, de nom de table ni de message d'exception : les résumés des sondes contiennent des versions et des noms de table, le niveau détail ne garde donc que l'identifiant, la catégorie et le statut. Les résumés se lisent sur la page d'administration ou avec la commande console.
+- La limite compte chaque requête (les refusées aussi) par adresse IP, dans le cache de l'application. Derrière un reverse proxy, configurez `trusted_proxies` de Symfony, sinon toutes les requêtes semblent venir du proxy.
+- Certaines installations PHP-FPM ou Apache suppriment l'en-tête `Authorization` : transmettez-le (`SetEnvIf Authorization ...` ou `fastcgi_param HTTP_AUTHORIZATION`).
+
+### Contrôle de santé d'un hébergeur comme Railway
+
+La documentation de Railway sur les contrôles de santé (https://docs.railway.com/deployments/healthchecks) ne mentionne aucun en-tête personnalisé : le contrôle est une requête simple sur le chemin configuré, envoyée avec le nom d'hôte `healthcheck.railway.app` (à autoriser si vous restreignez les hôtes), et toute réponse 2xx est saine. Il ne peut pas porter de jeton. Deux options :
+
+- `liveness: true` : la requête sans en-tête reçoit 200 ou 503 avec un **corps vide** ; rien d'autre n'en ressort. Désactivé par défaut ; à n'activer que pour un tel contrôle.
+- garder `liveness: false` et laisser un outil de supervision externe appeler `/health` avec le jeton.
+
+### Différence avec un 503 sur migrations en attente
+
+Une route de disponibilité qui répond 503 dès qu'une migration Doctrine est en attente (comme le `/healthz` de la démo B2B) n'est pas ce que fait ce point d'entrée : ici 503 signifie une sonde `critical`. `data.pending_migrations` est `critical` dès une migration en attente, mais les autres sondes `critical` comptent aussi et un `warning` ne compte jamais.
+
 ## Le contrat
 
 ```php

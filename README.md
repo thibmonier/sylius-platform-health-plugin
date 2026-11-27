@@ -246,6 +246,63 @@ railway ssh
 php bin/console tmonier:health:check
 ```
 
+## Expose the health over HTTP
+
+A public entry point, `GET /health`, for a monitoring tool or the health check of a host. It is **inactive until a token is configured** (every request answers 404, like any absent page) and it reads the snapshot shared with the page (`cache_ttl`): it never runs the probes on its own.
+
+```yaml
+# config/packages/tmonier_sylius_platform_health.yaml
+tmonier_sylius_platform_health:
+    http:
+        token: '%env(PLATFORM_HEALTH_TOKEN)%'            # global level
+        detail_token: '%env(PLATFORM_HEALTH_DETAIL_TOKEN)%'  # detail level (optional, different from token)
+        liveness: false                                  # see below (default: false)
+        rate_limit: 30                                   # requests per minute and per IP address (default: 30)
+```
+
+```yaml
+# config/routes/tmonier_sylius_platform_health.yaml (the plugin routes already import /health)
+tmonier_sylius_platform_health:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
+```
+
+To serve it elsewhere than `/health`, import `config/routes/admin.yaml` (with the administration prefix) and `config/routes/http.yaml` (with your prefix) yourself instead of `config/routes.yaml`.
+
+| Request | Answer |
+|---------|--------|
+| no token configured | 404 |
+| no header, `liveness: false` | 404 |
+| no header, `liveness: true` | 200 (no `critical` check) or 503, empty body |
+| wrong token, or token in the URL | 404 |
+| `Authorization: Bearer <token>` | 200 or 503, `{"status", "generated_at"}` |
+| `Authorization: Bearer <detail_token>` | 200 or 503, plus `checks` (`identifier`, `category`, `status` of each probe) |
+| more than `rate_limit` requests in a minute from one IP | 429, nothing is measured |
+
+503 only when at least one probe is `critical`: a `warning` or an `unknown` answers 200, the status in the body tells them apart.
+
+```bash
+curl -H "Authorization: Bearer $PLATFORM_HEALTH_TOKEN" https://shop.example.com/health
+```
+
+### Security
+
+- The token travels in the `Authorization` header, never in the URL (a URL ends up in logs and in referers), and is compared with `hash_equals`. Use long random values (`openssl rand -hex 32`) from the environment, never from a committed file.
+- A request without a valid token gets the same 404 as any absent page: the entry point does not reveal that it exists.
+- The answers never carry a summary, a detail, a link, a version, a path, a table name or an exception message: the summaries of the probes contain versions and table names, so the detail level keeps only the identifier, the category and the status. Read the summaries on the administration page or with the console command.
+- The limit counts every request (also the refused ones) per IP address, in the application cache. Behind a reverse proxy, configure Symfony's `trusted_proxies`, otherwise every request comes from the proxy.
+- Some PHP-FPM or Apache setups drop the `Authorization` header: forward it (`SetEnvIf Authorization ...` or `fastcgi_param HTTP_AUTHORIZATION`).
+
+### Health check of a host such as Railway
+
+The documentation of Railway on health checks (https://docs.railway.com/deployments/healthchecks) does not mention any custom header: the check is a plain request to the configured path, sent with the host name `healthcheck.railway.app` (to allow if you restrict hosts), and any 2xx answer is healthy. It cannot carry a token. Two options:
+
+- `liveness: true`: the request without header gets 200 or 503 with an **empty body**; nothing else is learned from it. It is off by default; enable it only for such a check.
+- keep `liveness: false` and let an external monitor call `/health` with the token.
+
+### Difference with a 503 on pending migrations
+
+A readiness route that answers 503 as soon as a Doctrine migration is pending (such as the `/healthz` of the B2B demo) is not what this entry point does: here 503 means a `critical` probe, and `data.pending_migrations` is `critical` from one pending migration, but the other `critical` probes count too and a `warning` never does.
+
 ## The contract
 
 ```php

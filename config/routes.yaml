@@ -7,7 +7,8 @@ tmonier_platform_health_admin:
     resource: "@TmonierSyliusPlatformHealthPlugin/config/routes/admin.yaml"
     prefix: '/%sylius_admin.path_name%'
 
-# The path of the public entry point: import config/routes/http.yaml yourself, with another prefix, to change it.
+# The public entry point (US-308). To serve it elsewhere, import routes/admin.yaml and routes/http.yaml yourself, each with its prefix.
 tmonier_platform_health_http:
     resource: "@TmonierSyliusPlatformHealthPlugin/config/routes/http.yaml"
     prefix: '/health'
+    trailing_slash_on_root: false
