@@ -299,7 +299,7 @@ A plugin such as a webhook outbox can ship its own probe **without making the he
         "sylius/sylius": "^2.2.9 || ^2.3"
     },
     "require-dev": {
-        "tmonier/sylius-platform-health-plugin": "^0.4"
+        "tmonier/sylius-platform-health-plugin": "^0.5"
     },
     "suggest": {
         "tmonier/sylius-platform-health-plugin": "Shows the health probe of this plugin on the administration page and dashboard"

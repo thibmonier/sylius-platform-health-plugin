@@ -299,7 +299,7 @@ Un plugin comme un outbox de webhooks peut fournir sa propre sonde **sans faire 
         "sylius/sylius": "^2.2.9 || ^2.3"
     },
     "require-dev": {
-        "tmonier/sylius-platform-health-plugin": "^0.4"
+        "tmonier/sylius-platform-health-plugin": "^0.5"
     },
     "suggest": {
         "tmonier/sylius-platform-health-plugin": "Affiche la sonde de santé de ce plugin sur la page et le tableau de bord d'administration"
