@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-27
+
 ### Added
 - Public HTTP entry point `GET /health` (US-308), inactive until `http.token` is configured. The token is read from `Authorization: Bearer` (never from the URL) and compared with `hash_equals`; a missing or wrong token answers 404 like an absent page. `http.token` gives `{status, generated_at}`, `http.detail_token` adds the `identifier`, `category` and `status` of each probe (never a summary, a detail, a link, a version, a path or an exception message). 503 only when a probe is `critical`. `http.liveness` (off by default): a request without header gets 200 or 503 with an empty body, for a host health check that sends no header (Railway documents none). Results come from the cached snapshot; `http.rate_limit` (30 per minute and per IP address by default) answers 429 before anything is measured. New dependency: `symfony/rate-limiter` (`^6.4 || ^7.4 || ^8.0`). README (English and French) "Expose the health over HTTP".
 
