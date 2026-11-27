@@ -2,6 +2,10 @@ imports:
     - { resource: "services.php" }
 
 tmonier_sylius_platform_health:
+    # US-308: fictitious tokens of the test application (the public entry point is inactive without one).
+    http:
+        token: fictive-global-token
+        detail_token: fictive-detail-token
     scheduled_tasks:
         # US-296: the test command of the heartbeat, on a daily rhythm so that a run of the suite keeps it on time.
         heartbeats:

@@ -42,6 +42,34 @@ final class ConfigurationTest extends TestCase
         yield 'prefix only' => ['ROLE_'];
     }
 
+    public function testTheHttpEntryPointIsInactiveByDefault(): void
+    {
+        self::assertSame(['token' => null, 'detail_token' => null, 'liveness' => false, 'rate_limit' => 30], $this->process([])['http']);
+    }
+
+    public function testAnEmptyTokenMeansNotConfigured(): void
+    {
+        $http = $this->process(['http' => ['token' => '', 'detail_token' => '']])['http'];
+
+        self::assertNull($http['token']);
+        self::assertNull($http['detail_token']);
+    }
+
+    public function testTheTwoTokensMustDiffer(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/must be different/');
+
+        $this->process(['http' => ['token' => 'same-fictive-value', 'detail_token' => 'same-fictive-value']]);
+    }
+
+    public function testTheRateLimitIsAtLeastOne(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->process(['http' => ['rate_limit' => 0]]);
+    }
+
     public function testTheDataProbesHaveOpinionatedDefaultsAndWatchNoTable(): void
     {
         $data = $this->process([])['data'];
@@ -133,11 +161,11 @@ final class ConfigurationTest extends TestCase
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}}
+     * @return array{access: array{role: string}, http: array{token: ?string, detail_token: ?string, liveness: bool, rate_limit: int}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}}
      */
     private function process(array $config): array
     {
-        /** @var array{access: array{role: string}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}} $processed */
+        /** @var array{access: array{role: string}, http: array{token: ?string, detail_token: ?string, liveness: bool, rate_limit: int}, data: array{connection_warning_ms: int, messenger: array<string, int>, table_growth: array<string, int>}, scheduled_tasks: array{heartbeats: array<string, string>, warning_beats: int, critical_beats: int}} $processed */
         $processed = (new Processor())->processConfiguration(new Configuration(), [$config]);
 
         return $processed;

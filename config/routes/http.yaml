@@ -1,0 +1,6 @@
+# The public entry point (US-308). Answers 404 until http.token is configured; see the README, "Expose the health over HTTP".
+tmonier_platform_health_http:
+    path: ''
+    methods: [GET]
+    defaults:
+        _controller: tmonier_sylius_platform_health.controller.http
